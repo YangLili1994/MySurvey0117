@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+
+        >
+        <TextView
+            android:id="@+id/activity_surveylist_fill"
+            android:layout_toLeftOf="@+id/center"
+            android:paddingRight="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="填写问卷"
+            android:textSize="16sp"
+            android:typeface="serif"
+            android:layout_centerVertical="true"
+            android:textColor="@color/textcolor_selector"
+            />
+        <ImageView
+            android:id="@+id/center"
+            android:layout_centerInParent="true"
+            android:layout_width="2dp"
+            android:layout_height="35dp"
+            android:background="@color/alpha_05_black" />
+        <TextView
+            android:id="@+id/activity_surveylist_result"
+            android:layout_toRightOf="@+id/center"
+            android:paddingLeft="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="查看结果"
+            android:textSize="16sp"
+            android:typeface="serif"
+            android:layout_centerVertical="true"
+            android:textColor="@color/textcolor_selector"/>
+
+    </RelativeLayout>
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:background="@color/divide_05_black" />
+
+    <ListView
+        android:id="@+id/activity_surveylist_list"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"></ListView>
+
+    <ImageView
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/divide_05_black" />
+
+
+
+</LinearLayout>

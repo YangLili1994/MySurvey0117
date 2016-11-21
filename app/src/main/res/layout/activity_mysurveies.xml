@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include
+        layout="@layout/custom_title"/>
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:background="@color/divide_05_black" />
+
+    <TextView
+        android:id="@+id/activity_mysurveies_hinttv"
+        android:padding="20dp"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="sorry 当前暂无问卷！"
+        android:textSize="16sp"
+        android:visibility="gone"/>
+
+    <ListView
+        android:id="@+id/activity_mysurveies_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"></ListView>
+
+    <Button
+        android:id="@+id/bt_new_survey"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/newsurvey"
+        android:padding="10dp"
+        android:layout_margin="20dp"
+        android:textColor="@color/white"
+        android:background="@drawable/button_shape"/>
+
+    <LinearLayout
+        android:id="@+id/activity_mysurveies_deletelayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/alpha_10_black"/>
+
+        <TextView
+            android:id="@+id/activity_mysurveies_deletetv"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="删除"
+            android:padding="15dp"
+            android:textSize="18sp"
+            android:textColor="@color/delete_color_selector"
+            android:enabled="false"/>
+
+    </LinearLayout>
+
+</LinearLayout>

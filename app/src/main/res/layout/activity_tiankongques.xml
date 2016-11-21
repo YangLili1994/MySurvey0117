@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+
+    <include
+        layout="@layout/custom_title"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
+            android:background="@color/divide_05_black" />
+
+        <LinearLayout
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="0px"
+            android:layout_height="0px"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="8dp"
+            android:paddingTop="8dp"
+            android:orientation="horizontal">
+            <ImageView
+                android:layout_width="5dp"
+                android:layout_height="match_parent"
+                android:src="@color/maincolor"
+                />
+            <TextView
+                android:padding="5dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="题目标题"
+                android:textColor="@color/wordlevel1"
+                android:textSize="18sp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="3dp"
+                />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/activity_tiankongques_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textColor="@color/wordlevel2"
+            android:hint="请输入题目标题"
+            android:textColorHint="@color/wordlevel2"
+            android:layout_marginBottom="10dp"
+            />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:background="@color/divide_05_black" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="此题必须回答"
+                android:textSize="15sp"
+                android:layout_gravity="center_vertical"/>
+
+            <ImageView
+                android:id="@+id/activity_tiankongques_togglebt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/toggle_btn"/>
+
+
+
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:background="@color/divide_05_black" />
+
+        <Button
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="10dp"
+            android:id="@+id/activity_tiankongques_finish"
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="确认"
+            android:textColor="@color/white"
+            android:background="@drawable/button_shape"
+            />
+
+    </LinearLayout>
+
+
+</LinearLayout>
