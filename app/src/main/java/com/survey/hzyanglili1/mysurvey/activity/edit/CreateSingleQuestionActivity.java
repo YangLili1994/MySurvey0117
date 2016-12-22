@@ -11,6 +11,7 @@ import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -19,14 +20,17 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.survey.hzyanglili1.mysurvey.Application.Constants;
 import com.survey.hzyanglili1.mysurvey.Application.MySurveyApplication;
 import com.survey.hzyanglili1.mysurvey.CustomView.MyGridView;
 import com.survey.hzyanglili1.mysurvey.R;
 import com.survey.hzyanglili1.mysurvey.activity.BaseActivity;
+import com.survey.hzyanglili1.mysurvey.adapter.MyQuesOptionAdapter;
 import com.survey.hzyanglili1.mysurvey.db.DBHelper;
 import com.survey.hzyanglili1.mysurvey.db.QuestionTableDao;
 import com.survey.hzyanglili1.mysurvey.db.SurveyTableDao;
@@ -44,15 +48,14 @@ import java.util.List;
 
 public class CreateSingleQuestionActivity extends BaseActivity {
 
-    public static final int CHOOSE_PHOTO = 1;
-    public static final int SHOW_PHOTO = 2;
-    public static final int DELETE_PHOTO = 3;
+    private int curImagePos = -1;
 
 
     private EditText titleEt = null;
     String titleString = null;
 
     private LinearLayout optionLayout = null;
+    private ListView optionListView = null;
     private TextView addoption = null;
     private TextView customTitle = null;
 
@@ -105,6 +108,10 @@ public class CreateSingleQuestionActivity extends BaseActivity {
 
     private String surveyName = null;
 
+    //显示内容
+    List<String> optionTitles = new ArrayList<>();
+    List<String> optionImages= new ArrayList<>();
+
     private SurveyTableDao surveyTableDao = null;
     private QuestionTableDao questionTableDao = null;
 
@@ -146,11 +153,40 @@ public class CreateSingleQuestionActivity extends BaseActivity {
 
         titleEt = (EditText)findViewById(R.id.activity_createsinglequestion_title);
 
-        optionLayout = (LinearLayout)findViewById(R.id.activity_createsinglequestion_optionlayout);
-        addoption = (TextView)findViewById(R.id.activity_createsinglequestion_addoption);
+        optionListView = (ListView) findViewById(R.id.activity_createsinglequestion_option_listview);
+
+        optionTitles.add("请输入选项文字");
+        optionTitles.add("请输入选项文字");
+
+        optionImages.add(null);
+        optionImages.add(null);
+
+        optionListView.setAdapter(new MyQuesOptionAdapter(this, optionTitles, optionImages, new MyQuesOptionAdapter.MyQuesOptionAdapterCallBack() {
+            @Override
+            public void deleteOption(int position) {
+
+                optionTitles.remove(position);
+                optionImages.remove(position);
+
+                optionListView.invalidateViews();
+            }
+
+            @Override
+            public void addImage(int position) {
+                Intent intent = new Intent("android.intent.action.GET_CONTENT");
+                intent.setType("image/*");
+                startActivityForResult(intent, Constants.CHOOSE_PHOTO);
+
+                curImagePos = position;
+
+            }
+        }));
+
+        MySurveyApplication.setListViewHeightBasedOnChildren(optionListView);
+
 
         titlePicGridView = (MyGridView)findViewById(R.id.activity_createsinglequestion_titlepic_gridview) ;
-        optionGridView = (MyGridView)findViewById(R.id.activity_createsinglequestion_optionpic_gridview) ;
+     //   optionGridView = (MyGridView)findViewById(R.id.activity_createsinglequestion_optionpic_gridview) ;
 
         mustOptionToggleButton = (ImageView)findViewById(R.id.activity_createsinglequestion_mustoptiontogglebt) ;
         multiOptionToggleButton = (ImageView)findViewById(R.id.activity_createsinglequestion_multioption_togglebt) ;
@@ -198,20 +234,15 @@ public class CreateSingleQuestionActivity extends BaseActivity {
 
 
 
-        addoption.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                EditText editText = new EditText(CreateSingleQuestionActivity.this);
-                editText.setHint("选项"+(count++));
-                editText.setFocusable(true);
-                editText.setTextSize(TypedValue.COMPLEX_UNIT_SP,16);
-                editText.setTextColor(ContextCompat.getColor(CreateSingleQuestionActivity.this,R.color.wordlevel2));
-                editText.setHintTextColor(ContextCompat.getColor(CreateSingleQuestionActivity.this,R.color.wordlevel2));
-                editText.requestFocus();
-                optionLayout.addView(editText);
-
-            }
-        });
+//        addoption.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                final View optionView = LayoutInflater.from(CreateSingleQuestionActivity.this).inflate(R.layout.item_questionoption,optionLayout,false);
+//
+//                ImageView delImage = (ImageView) optionView.findViewById(R.id.item_questionoption_delete);
+//                delImage.setOnClickListener(new delListener());
+//            }
+//        });
         //完成题目
         finishBt.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -227,9 +258,33 @@ public class CreateSingleQuestionActivity extends BaseActivity {
         });
 
         initGridView(titlePicGridView,1);
-        initGridView(optionGridView,2);
 
 
+    }
+
+    class delListener implements View.OnClickListener{
+
+        @Override
+        public void onClick(View view) {
+            optionLayout.removeView((View)view.getParent());
+        }
+    }
+
+    class addImageListener implements View.OnClickListener{
+
+        private int position = -1;
+
+        public addImageListener(int position) {
+            this.position = position;
+        }
+
+        @Override
+        public void onClick(View view) {//添加图片
+            Intent intent = new Intent("android.intent.action.GET_CONTENT");
+            intent.setType("image/*");
+            startActivityForResult(intent, Constants.CHOOSE_PHOTO);
+            curImagePos = position;
+        }
     }
 
     void initGridView(final MyGridView gridView, final int id){
@@ -301,7 +356,7 @@ public class CreateSingleQuestionActivity extends BaseActivity {
 
                     Intent intent = new Intent("android.intent.action.GET_CONTENT");
                     intent.setType("image/*");
-                    startActivityForResult(intent,CHOOSE_PHOTO);
+                    startActivityForResult(intent,Constants.CHOOSE_PHOTO);
                 }else {//点击放大图片
 
                     Log.d("haha","点击放大图片");
@@ -310,7 +365,7 @@ public class CreateSingleQuestionActivity extends BaseActivity {
                     intent.putExtra("pic_path",(String) currentImageItem.get(i).get("pathImage"));
                     intent.putExtra("pic_id",i);
 
-                    startActivityForResult(intent,SHOW_PHOTO);
+                    startActivityForResult(intent,Constants.SHOW_PHOTO);
 
 
                 }
@@ -373,50 +428,56 @@ public class CreateSingleQuestionActivity extends BaseActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case CHOOSE_PHOTO:
+            case Constants.CHOOSE_PHOTO://选择图片
                 if (resultCode == RESULT_OK){
 
-                    if (currentImageItem == null || currentGridView == null){
-                        return;
-                    }
+                    if (curImagePos == -1) return;
 
                     ChoosePicHelper choosePicHelper = new ChoosePicHelper(this);
                     String imagePath = choosePicHelper.getPic(data);
 
-                    if (titleImageFlag) {
-                        titleImageFlag = false;
 
-                    }
-
-                    if (optionImageFlag){
-                        optionImageFlag = false;
-                    }
+//                    if (titleImageFlag) {
+//                        titleImageFlag = false;
+//
+//                    }
+//
+//                    if (optionImageFlag){
+//                        optionImageFlag = false;
+//                    }
 
                     if (imagePath != null){//已经获得图片
                         //bmp = BitmapFactory.decodeFile(imagePath);
-                        bmp = MySurveyApplication.decodeSampledBitmapFromFile(imagePath,500,500);
+                        //bmp = MySurveyApplication.decodeSampledBitmapFromFile(imagePath,500,500);
 
-                        HashMap<String, Object> map = new HashMap<String, Object>();
-                        map.put("itemImage", bmp);
-                        map.put("pathImage", imagePath);
-                        currentImageItem.add(map);
-                        simpleAdapter = new SimpleAdapter(this,
-                                currentImageItem, R.layout.picgridview_item,
-                                new String[] { "itemImage"}, new int[] { R.id.picgridviewitem_image});
-                        //接口载入图片
-                        simpleAdapter.setViewBinder(new SimpleAdapter.ViewBinder() {
-                            @Override
-                            public boolean setViewValue(View view, Object data,
-                                                        String textRepresentation) {
-                                // TODO Auto-generated method stub
-                                if(view instanceof ImageView && data instanceof Bitmap){
-                                    ImageView i = (ImageView)view;
-                                    i.setImageBitmap((Bitmap) data);
-                                    return true;
-                                }
-                                return false;
-                            }
-                        });
+                        Log.d("lala","获得的图片path = "+imagePath);
+
+                        optionImages.set(curImagePos,imagePath);
+                        optionListView.invalidateViews();
+
+
+
+//                        HashMap<String, Object> map = new HashMap<String, Object>();
+//                        map.put("itemImage", bmp);
+//                        map.put("pathImage", imagePath);
+//                        currentImageItem.add(map);
+//                        simpleAdapter = new SimpleAdapter(this,
+//                                currentImageItem, R.layout.picgridview_item,
+//                                new String[] { "itemImage"}, new int[] { R.id.picgridviewitem_image});
+//                        //接口载入图片
+//                        simpleAdapter.setViewBinder(new SimpleAdapter.ViewBinder() {
+//                            @Override
+//                            public boolean setViewValue(View view, Object data,
+//                                                        String textRepresentation) {
+//                                // TODO Auto-generated method stub
+//                                if(view instanceof ImageView && data instanceof Bitmap){
+//                                    ImageView i = (ImageView)view;
+//                                    i.setImageBitmap((Bitmap) data);
+//                                    return true;
+//                                }
+//                                return false;
+//                            }
+//                        });
                         currentGridView.setAdapter(simpleAdapter);
                         simpleAdapter.notifyDataSetChanged();
                         //刷新后释放防止手机休眠后自动添加
@@ -424,8 +485,8 @@ public class CreateSingleQuestionActivity extends BaseActivity {
                     }
                 }
                 break;
-            case SHOW_PHOTO://显示图片的返回结果
-                if (resultCode == DELETE_PHOTO){
+            case Constants.SHOW_PHOTO://显示图片的返回结果
+                if (resultCode == Constants.DELETE_PHOTO){
                     //要删除的图片id
                     int picId = data.getExtras().getInt("pic_id");
 

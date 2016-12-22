@@ -96,28 +96,13 @@
                         />
                 </LinearLayout>
 
-                <LinearLayout
-                    android:id="@+id/activity_createsinglequestion_optionlayout"
+                <ListView
+                    android:id="@+id/activity_createsinglequestion_option_listview"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    <EditText
-                        android:layout_alignParentTop="true"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="选项1"
-                        android:textColorHint="@color/wordlevel2"
-                        android:textSize="16sp"
-                        android:textColor="@color/wordlevel2"/>
-                    <EditText
-                        android:layout_alignParentBottom="true"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColorHint="@color/wordlevel2"
-                        android:hint="选项2"
-                        android:textSize="16sp"
-                        android:textColor="@color/wordlevel2"/>
-                </LinearLayout>
+                    android:dividerHeight="10dp"
+                    android:divider="@color/white"></ListView>
+
 
 
                 <TextView
@@ -136,13 +121,6 @@
                     android:background="@color/divide_05_black" />
 
 
-                <com.survey.hzyanglili1.mysurvey.CustomView.MyGridView
-                    android:id="@+id/activity_createsinglequestion_optionpic_gridview"
-                    android:gravity="center"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:numColumns="4">
-                </com.survey.hzyanglili1.mysurvey.CustomView.MyGridView>
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="10dp"

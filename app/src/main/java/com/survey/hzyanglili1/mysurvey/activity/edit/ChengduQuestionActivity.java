@@ -54,9 +54,13 @@ public class ChengduQuestionActivity extends BaseActivity {
     private ImageView toggleButton;
     private Boolean toggleFlag = false;
 
-    private TextView chengduLevelTV = null;
-    private LinearLayout chengduLevelLayout = null;
-    private ImageView chengduLevelImage = null;
+    private TextView chengduminTV = null;
+    private LinearLayout chengduminLayout = null;
+    private ImageView chengduminImage = null;
+
+    private TextView chengdumaxTV = null;
+    private LinearLayout chengdumaxLayout = null;
+    private ImageView chengdumaxImage = null;
 
     private EditText leftTextView = null;
     private EditText rightTextView = null;
@@ -77,7 +81,8 @@ public class ChengduQuestionActivity extends BaseActivity {
     String quesTitleImage = "";
     String leftText = "";
     String rightText = "";
-    String level = "5";
+    int min = 1;
+    int max = 5;
 
     private int totalQuesCount = 0;
 
@@ -139,9 +144,13 @@ public class ChengduQuestionActivity extends BaseActivity {
         titleEt = (EditText)findViewById(R.id.activity_chengduques_title);
         toggleButton = (ImageView) findViewById(R.id.activity_chengduques_togglebt);
 
-        chengduLevelTV = (TextView)findViewById(R.id.activity_chengduques_dengji_text);
-        chengduLevelImage = (ImageView)findViewById(R.id.activity_chengduques_dengji_image);
-        chengduLevelLayout = (LinearLayout)findViewById(R.id.activity_chengduques_dengji);
+        chengduminTV = (TextView)findViewById(R.id.activity_chengduques_min_text);
+        chengduminImage = (ImageView)findViewById(R.id.activity_chengduques_min_image);
+        chengduminLayout = (LinearLayout)findViewById(R.id.activity_chengduques_min);
+
+        chengdumaxTV = (TextView)findViewById(R.id.activity_chengduques_max_text);
+        chengdumaxImage = (ImageView)findViewById(R.id.activity_chengduques_max_image);
+        chengdumaxLayout = (LinearLayout)findViewById(R.id.activity_chengduques_max);
 
         rightTextView = (EditText)findViewById(R.id.activity_chengduques_righttext);
         leftTextView = (EditText)findViewById(R.id.activity_chengduques_lefttext);
@@ -149,7 +158,8 @@ public class ChengduQuestionActivity extends BaseActivity {
         titleEt.setText(quesTitle);
         leftTextView.setText(leftText);
         rightTextView.setText(rightText);
-        chengduLevelTV.setText(level);
+        chengduminTV.setText(min+" ");
+        chengdumaxTV.setText(max+" ");
 
 
         if (!isNew){
@@ -175,17 +185,35 @@ public class ChengduQuestionActivity extends BaseActivity {
             }
         });
 
-        chengduLevelLayout.setOnClickListener(new View.OnClickListener() {
+        chengduminLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
 
                 new AlertDialog.Builder(ChengduQuestionActivity.this).setTitle("请选择程度等级").setIcon(
                         android.R.drawable.ic_dialog_info).setSingleChoiceItems(
-                        new String[] { " 3", " 4"," 5"," 6"," 7"," 8"," 9"," 10" }, (Integer.parseInt(level)-3),
+                        new String[] { " -5", " -4"," -3"," -2"," -1"," 0"," 1"}, (min+5),
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                chengduLevelTV.setText(""+(which+3));
+                                chengduminTV.setText((which-5)+" ");
+                                dialog.dismiss();
+                            }
+                        }).setNegativeButton("取消", null).show();
+
+            }
+        });
+
+        chengdumaxLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+
+                new AlertDialog.Builder(ChengduQuestionActivity.this).setTitle("请选择程度等级").setIcon(
+                        android.R.drawable.ic_dialog_info).setSingleChoiceItems(
+                        new String[] { " 3", " 4"," 5"," 6"," 7"," 8"," 9"," 10" }, (max-3),
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                chengdumaxTV.setText((which+3)+" ");
                                 dialog.dismiss();
                             }
                         }).setNegativeButton("取消", null).show();
@@ -215,10 +243,11 @@ public class ChengduQuestionActivity extends BaseActivity {
 
         leftText = leftTextView.getText().toString().trim();
         rightText = rightTextView.getText().toString().trim();
-        level = chengduLevelTV.getText().toString().trim();
+        min = Integer.parseInt(chengduminTV.getText().toString().trim());
+        max = Integer.parseInt(chengdumaxTV.getText().toString().trim());
 
         StringBuilder options = new StringBuilder();
-        options.append(leftText).append("$").append(rightText).append("$").append(level);
+        options.append(leftText).append("$").append(rightText).append("$").append(min).append("$").append(max);
 
         Log.d("haha",TAG+"添加程度题  options --- "+options.toString());
 
@@ -262,7 +291,8 @@ public class ChengduQuestionActivity extends BaseActivity {
 
         leftText = options[0];
         rightText = options[1];
-        level = options[2];
+        min = Integer.parseInt(options[2]);
+        max = Integer.parseInt(options[3]);
 
 
     }

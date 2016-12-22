@@ -6,6 +6,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.KeyEvent;
@@ -23,10 +25,12 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.survey.hzyanglili1.mysurvey.Application.Constants;
 import com.survey.hzyanglili1.mysurvey.Application.MySurveyApplication;
 import com.survey.hzyanglili1.mysurvey.CustomView.MyGridView;
 import com.survey.hzyanglili1.mysurvey.R;
 import com.survey.hzyanglili1.mysurvey.activity.BaseActivity;
+import com.survey.hzyanglili1.mysurvey.adapter.MyQuesOptionAdapter;
 import com.survey.hzyanglili1.mysurvey.db.DBHelper;
 import com.survey.hzyanglili1.mysurvey.db.QuestionTableDao;
 import com.survey.hzyanglili1.mysurvey.db.SurveyTableDao;
@@ -40,7 +44,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.survey.hzyanglili1.mysurvey.activity.edit.CreateSingleQuestionActivity.CHOOSE_PHOTO;
+
 
 /**
  * Created by hzyanglili1 on 2016/11/2.
@@ -64,6 +68,8 @@ public class SingleQuesShowActivity extends BaseActivity {
     private TextView addoption = null;
 
     private ListView listView = null;
+
+    private RecyclerView recyclerView = null;
 
 
     //当前正在编辑的问卷
@@ -242,7 +248,12 @@ public class SingleQuesShowActivity extends BaseActivity {
 
         listView = (ListView)findViewById(R.id.activity_singlequesshow_listview);
 
-        listView.setAdapter(new ArrayAdapter<String>(this,R.layout.item_questionoption,R.id.item_questionoption_option,optionTextList));
+//        recyclerView = (RecyclerView) findViewById(R.id.activity_singlequesshow_recyclerview);
+//        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+//        recyclerView.setAdapter();
+
+       // listView.setAdapter(new ArrayAdapter<String>(this,R.layout.item_questionoption,R.id.item_questionoption_option,optionTextList));
+        listView.setAdapter(new MyQuesOptionAdapter(this,null,optionTextList,null));
         MySurveyApplication.setListViewHeightBasedOnChildren(listView);
 
         initGridView(titlePicGridView,1);
@@ -365,7 +376,7 @@ public class SingleQuesShowActivity extends BaseActivity {
                 if (i == 0){//第一张为添加图片
                     Intent intent = new Intent("android.intent.action.GET_CONTENT");
                     intent.setType("image/*");
-                    startActivityForResult(intent,CHOOSE_PHOTO);
+                    startActivityForResult(intent, Constants.CHOOSE_PHOTO);
                 }else {
                     Log.d("haha","点击放大图片  id"+id);
 
@@ -384,7 +395,7 @@ public class SingleQuesShowActivity extends BaseActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case CHOOSE_PHOTO:
+            case Constants.CHOOSE_PHOTO:
                 if (resultCode == RESULT_OK){
 
                     if (currentImageItem == null || currentGridView == null){

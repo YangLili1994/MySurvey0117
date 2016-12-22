@@ -37,6 +37,7 @@ import android.widget.Toast;
 import com.survey.hzyanglili1.mysurvey.Application.Constants;
 import com.survey.hzyanglili1.mysurvey.Application.MySurveyApplication;
 import com.survey.hzyanglili1.mysurvey.CustomView.MyGridView;
+import com.survey.hzyanglili1.mysurvey.CustomView.MyRectView;
 import com.survey.hzyanglili1.mysurvey.R;
 import com.survey.hzyanglili1.mysurvey.activity.BaseActivity;
 import com.survey.hzyanglili1.mysurvey.db.DBHelper;
@@ -660,28 +661,28 @@ public class SurveyPrelookActivity extends BaseActivity{
         }
 
         //程度button
-        LinearLayout chengduLevel = (LinearLayout)view.findViewById(R.id.chengdu_chengdu) ;
-        Button button = (Button)view.findViewById(R.id.chengdu_chengdu_bt);
+        final LinearLayout chengduLevel = (LinearLayout)view.findViewById(R.id.chengdu_chengdu) ;
+        //Button button = (Button)view.findViewById(R.id.chengdu_chengdu_bt);
 
-        for (int i= 0;i<Integer.parseInt(option[2]);i++){
-            Button button1 = new Button(this);
-            LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams)button.getLayoutParams();
-            button1.setLayoutParams(layoutParams);
-            button1.setVisibility(View.VISIBLE);
-            button1.setBackgroundResource(R.drawable.bt_bg);
-            button1.setTag(i);
+        int min = Integer.parseInt(option[2].trim());
+        int max = Integer.parseInt(option[3].trim());
 
-            button1.setOnClickListener(new View.OnClickListener() {
+        for (int i= min;i<=max;i++){
+
+            MyRectView myRectView = new MyRectView(this,i);
+            chengduLevel.addView(myRectView);
+
+            myRectView.setOnClickListener(new View.OnClickListener() {
                 //程度button点击
                 @Override
                 public void onClick(View view) {
 
-                    for (int i=0;i<buttonViews.size();i++){
-                        buttonViews.get(i).setSelected(false);
+                    for (int i=0;i<chengduLevel.getChildCount();i++){
+                        ((MyRectView)chengduLevel.getChildAt(i)).setViewSelected(false);
                     }
 
-                    view.setSelected(true);
-                    surveyResults[num-1] = ""+((int)view.getTag()+1);
+                    ((MyRectView)view).setViewSelected(true);
+                    surveyResults[num-1] = ""+(((MyRectView)view).getmValue());
 
                     isFilled[num-1] = true;
 
@@ -689,17 +690,45 @@ public class SurveyPrelookActivity extends BaseActivity{
 
             });
 
-            if (i == chengduRes-1){
-                button1.setSelected(true);
-            }
-
-            buttonViews.add(button1);
-
-            chengduLevel.addView(button1);
-
         }
 
+//        for (int i= min;i<=max;i++){
+//            Button button1 = new Button(this);
+//            LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams)button.getLayoutParams();
+//            button1.setLayoutParams(layoutParams);
+//            button1.setVisibility(View.VISIBLE);
+//            button1.setBackgroundResource(R.drawable.bt_bg);
+//            button1.setText(""+i);
+//            button1.setTextSize(5);
+//            button1.setTag(i);
+//
+//            button1.setOnClickListener(new View.OnClickListener() {
+//                //程度button点击
+//                @Override
+//                public void onClick(View view) {
+//
+//                    for (int i=0;i<buttonViews.size();i++){
+//                        buttonViews.get(i).setSelected(false);
+//                    }
+//
+//                    view.setSelected(true);
+//                    surveyResults[num-1] = ""+((int)view.getTag()+1);
+//
+//                    isFilled[num-1] = true;
+//
+//                }
+//
+//            });
+//
+//            if (i == chengduRes-1){
+//                button1.setSelected(true);
+//            }
+//
+//            buttonViews.add(button1);
+//
+//            chengduLevel.addView(button1);
 
+ //       }
 
         layoutContainer.addView(view);
     }

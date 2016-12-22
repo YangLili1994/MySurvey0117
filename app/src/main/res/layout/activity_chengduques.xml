@@ -117,36 +117,71 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
             <TextView
                 android:padding="10dp"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="评价等级总数"
+                android:text="最小值"
                 android:textColor="@color/wordlevel1"/>
             <LinearLayout
-                android:id="@+id/activity_chengduques_dengji"
+                android:id="@+id/activity_chengduques_min"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/activity_chengduques_dengji_text"
+                    android:id="@+id/activity_chengduques_min_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="5 "
+                    android:text="1 "
                     android:textColor="@color/alpha_65_black"/>
 
                 <ImageView
-                    android:id="@+id/activity_chengduques_dengji_image"
+                    android:id="@+id/activity_chengduques_min_image"
                     android:layout_width="30dp"
                     android:layout_height="30dp"
                     android:src="@drawable/dropdown"/>
 
             </LinearLayout>
+        </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+                <TextView
+                    android:padding="10dp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="最大值"
+                    android:textColor="@color/wordlevel1"/>
+                <LinearLayout
+                    android:id="@+id/activity_chengduques_max"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:id="@+id/activity_chengduques_max_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="5 "
+                        android:textColor="@color/alpha_65_black"/>
+
+                    <ImageView
+                        android:id="@+id/activity_chengduques_max_image"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/dropdown"/>
+
+                </LinearLayout>
 
         </LinearLayout>
         <ImageView

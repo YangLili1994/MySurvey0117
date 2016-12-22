@@ -99,18 +99,24 @@ public class MySurveyListCursorAdapter extends CursorAdapter {
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
 
+        final ViewHolder viewHolder= (ViewHolder)view.getTag();
+
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String surveyId = ((TextView)view.findViewById(R.id.item_mysurveylistcursoradapter_surveyid)).getText().toString().trim();
                 Log.d("haha","surveyid = "+surveyId);
 
-                callBack.itemClickHandler(Integer.parseInt(surveyId));
+                if(!isEdit){
+                    callBack.itemClickHandler(Integer.parseInt(surveyId));
+                }else {
+                    viewHolder.checkBox.setChecked(!viewHolder.checkBox.isChecked());
+                }
 
             }
         });
 
-        ViewHolder viewHolder= (ViewHolder)view.getTag();
+
 
         final int id = cursor.getInt(cursor.getColumnIndex("survey_id"));
         String name = cursor.getString(cursor.getColumnIndex("survey_name"));
