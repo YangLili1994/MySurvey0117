@@ -7,15 +7,6 @@
     android:gravity="center_vertical"
     >
 
-    <CheckBox
-        android:id="@+id/item_mysurveylistcursoradapter_checkbox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin= "15dp"
-        android:button="@drawable/check_bg"
-        android:visibility="gone"
-        />
-
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="0dp"
@@ -30,13 +21,15 @@
             android:textSize="18sp"
             android:maxLines="1"
             android:ellipsize="end"
+            android:textColor="@color/wordlevel1"
             />
         <TextView
             android:layout_marginTop="5dp"
             android:id="@+id/item_mysurveylistcursoradapter_surveydesc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="15sp"/>
+            android:textSize="15sp"
+            android:textColor="@color/wordlevel2"/>
         <TextView
             android:id="@+id/item_mysurveylistcursoradapter_surveyid"
             android:layout_width="wrap_content"
@@ -44,4 +37,14 @@
             android:visibility="gone"/>
 
     </LinearLayout>
+
+
+    <ImageView
+        android:id="@+id/item_mysurveylistcursoradapter_public"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/toggle_btn"
+        android:layout_marginRight="15dp"
+        />
+
 </LinearLayout>

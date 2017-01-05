@@ -26,28 +26,18 @@
             android:layout_width="0px"
             android:layout_height="0px"/>
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:padding="5dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingBottom="8dp"
-            android:paddingTop="8dp"
-            android:orientation="horizontal">
-            <ImageView
-                android:layout_width="5dp"
-                android:layout_height="match_parent"
-                android:src="@color/maincolor"
-                />
-            <TextView
-                android:padding="5dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="题目标题"
-                android:textColor="@color/wordlevel1"
-                android:textSize="18sp"
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="3dp"
-                />
-        </LinearLayout>
+            android:text="问题"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:textColor="@color/wordlevel2"
+            android:textSize="16sp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="3dp"
+            />
 
         <EditText
             android:id="@+id/activity_tiankongques_title"
@@ -55,10 +45,41 @@
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textColor="@color/wordlevel2"
-            android:hint="请输入题目标题"
-            android:textColorHint="@color/wordlevel2"
-            android:layout_marginBottom="10dp"
+            android:background="@drawable/option_border"
+            android:layout_margin="5dp"
             />
+
+        <com.survey.hzyanglili1.mysurvey.CustomView.MyGridView
+            android:id="@+id/activity_tiankongques_titlepic_gridview"
+            android:gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:numColumns="4"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:visibility="gone">
+        </com.survey.hzyanglili1.mysurvey.CustomView.MyGridView>
+
+        <LinearLayout
+            android:id="@+id/activity_tiankongques_addtitleimage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_gravity="center_horizontal"
+            android:padding="20dp">
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/add"
+                android:layout_gravity="center_vertical"/>
+            <TextView
+                android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="17sp"
+                android:text="添加图片"/>
+        </LinearLayout>
 
         <ImageView
             android:layout_width="match_parent"

@@ -1,5 +1,9 @@
 package com.survey.hzyanglili1.mysurvey.entity;
 
+import com.survey.hzyanglili1.mysurvey.Application.Constants;
+
+import org.json.JSONArray;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,86 +13,125 @@ import java.util.List;
  */
 
 public class TiankongQuestion implements Question {
+
     private int surveyId;
-    private int quesId;
-    private QuestionType type;
-    private String title;
-    private String imagePath;
-    private Boolean isMust;
-    private Boolean isMulti;
+    private int id;
+    private String text;
+    private int type;
+    private String typeS;
+    private int required;
+    private int hasPic;
+    private int totalPic;
+    private String titlePics;
 
-    private String result;
-
-    public TiankongQuestion(int surveyId, int quesId, String title,String imagePath, Boolean isMust) {
+    public TiankongQuestion(int surveyId,int id, String text, int type, String typeS) {
         this.surveyId = surveyId;
-        this.quesId = quesId;
-        this.title = title;
-        this.isMust = isMust;
-        this.imagePath = imagePath;
+        this.id = id;
+        this.text = text;
+        this.type = type;
+        this.typeS = typeS;
     }
 
-    public String getResult() {
-        return result;
-    }
-
-    public void setResult(String result) {
-        this.result = result;
+    public TiankongQuestion(int surveyId,int id, String text, int type, String typeS, int required, int hasPic, int totalPic, String titlePics) {
+        this.surveyId = surveyId;
+        this.id = id;
+        this.text = text;
+        this.type = type;
+        this.typeS = typeS;
+        this.required = required;
+        this.hasPic = hasPic;
+        this.totalPic = totalPic;
+        this.titlePics = titlePics;
     }
 
     @Override
+    public String toString() {
+        String ques = "surveyId:"+surveyId+" id:"+id+" text:"+text+" type:"+type+" typeS:"+typeS+" required:"+required+
+                " hasPic:"+hasPic+" totalPic:"+totalPic+" titlePics:"+titlePics;
+        return ques;
+    }
+
     public int getSurveyId() {
         return surveyId;
     }
 
     @Override
-    public int getQuestionId() {
-        return quesId;
+    public int getTotalOption() {
+        return 0;
     }
 
     @Override
-    public QuestionType getType() {
-        return QuestionType.TIANKONG;
+    public int getId() {
+        return id;
+    }
+
+
+    @Override
+    public String getTitlePics() {
+        return titlePics;
+    }
+
+    public void setTitlePics(String titlePics) {
+        this.titlePics = titlePics;
     }
 
     @Override
-    public String getTitle() {
-        return title;
+    public int getTotalPic() {
+        return totalPic;
+    }
+
+    public void setTotalPic(int totalPic) {
+        this.totalPic = totalPic;
     }
 
     @Override
-    public Boolean getIsMust() {
-        return isMust;
+    public int getHasPic() {
+        return hasPic;
+    }
+
+    public void setHasPic(int hasPic) {
+        this.hasPic = hasPic;
     }
 
     @Override
-    public Boolean getIsMulti() {
-        return false;
+    public int getRequired() {
+        return required;
+    }
+
+    public void setRequired(int required) {
+        this.required = required;
     }
 
     @Override
-    public String getImagePath() {
-        return imagePath;
+    public String getTypeS() {
+        return typeS;
     }
 
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
+
+    public int getType() {
+        return type;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public void setMust(Boolean must) {
-        isMust = must;
+    public void setType(int type) {
+        this.type = type;
     }
 
     @Override
-    public String getTextOption() {
-        return null;
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
     }
 
     @Override
-    public String getImageOption() {
-        return null;
+    public String getOptionTexts() {
+        return "";
+    }
+
+    @Override
+    public String getOptionPics() {
+        return "";
     }
 }

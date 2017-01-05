@@ -9,14 +9,16 @@ public interface Question {
     public static enum QuestionType{XUANZE,TIANKONG,CHENGDU}
 
     int getSurveyId();
-    int getQuestionId();
-    QuestionType getType();
-    String getTitle();
-    String getImagePath();
-    Boolean getIsMust();
-    Boolean getIsMulti();
-    String getTextOption();
-    String getImageOption();
+    int getId();
+    String getText();
+    int getType();
+    String getTypeS();
+    int getRequired();
+    int getHasPic();
+    int getTotalPic();
+    String getTitlePics();
+    int getTotalOption();
+    String getOptionTexts();
+    String getOptionPics();
 
-    String getResult();
 }

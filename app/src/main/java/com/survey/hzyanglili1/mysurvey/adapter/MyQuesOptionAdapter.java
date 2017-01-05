@@ -1,8 +1,8 @@
 package com.survey.hzyanglili1.mysurvey.adapter;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,14 +10,13 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
 
-import com.survey.hzyanglili1.mysurvey.Application.Constants;
 import com.survey.hzyanglili1.mysurvey.Application.MySurveyApplication;
 import com.survey.hzyanglili1.mysurvey.R;
 
 import java.util.List;
-import java.util.zip.Inflater;
+
+import de.hdodenhof.circleimageview.CircleImageView;
 
 /**
  * Created by hzyanglili1 on 2016/12/22.
@@ -69,20 +68,26 @@ public class MyQuesOptionAdapter extends BaseAdapter {
             viewHolder = new ViewHolder();
             view = LayoutInflater.from(context).inflate(R.layout.item_questionoption,viewGroup,false);
             viewHolder.optionTitle = (EditText) view.findViewById(R.id.item_questionoption_title);
-            viewHolder.optionImage = (ImageView) view.findViewById(R.id.item_questionoption_image);
+            viewHolder.optionImage = (CircleImageView) view.findViewById(R.id.item_questionoption_image);
             viewHolder.delImage = (ImageView) view.findViewById(R.id.item_questionoption_delete);
             view.setTag(viewHolder);
         }else {
             viewHolder = (ViewHolder) view.getTag();
         }
 
+        if (optionTitles.get(i) != null){
+            viewHolder.optionTitle.setText(optionTitles.get(i));
+        }
 
-        viewHolder.optionTitle.setText(optionTitles.get(i));
         if (optionImages.get(i) != null){
-            Log.d("lala","position "+i+"imagepath "+optionImages.get(i));
-            Bitmap bmp = MySurveyApplication.decodeSampledBitmapFromFile(optionImages.get(i),64,64);
+
+            //Bitmap bmp = MySurveyApplication.decodeSampledBitmapFromFile(optionImages.get(i),80,80);
+
+            Bitmap bmp = BitmapFactory.decodeFile(optionImages.get(i));
             viewHolder.optionImage.setImageBitmap(bmp);
+
             bmp = null;
+
         }
 
         viewHolder.delImage.setOnClickListener(new View.OnClickListener() {
@@ -105,12 +110,19 @@ public class MyQuesOptionAdapter extends BaseAdapter {
             }
         });
 
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
         return view;
     }
 
     class ViewHolder{
         public EditText optionTitle;
-        public ImageView optionImage;
+        public CircleImageView optionImage;
         public ImageView delImage;
 
     }

@@ -76,7 +76,7 @@ public class MyQuesListViewAdapter extends BaseAdapter {
 
     public int getItemViewId(int position){
         int i = -1;
-        i = Integer.parseInt((String)list.get(position).get("quesId"));
+        i = Integer.parseInt((String)list.get(position).get("id"));
 
         return i;
     }
@@ -91,9 +91,9 @@ public class MyQuesListViewAdapter extends BaseAdapter {
         TextView questionType = (TextView) view.findViewById(R.id.item_surveyquestion_type);
 
         //向viewholder中填入数据
-        String title = (String)list.get(i).get("quesTitle");
-        String id = (String)list.get(i).get("quesId");
-        final String type = (String)list.get(i).get("quesType");
+        String title = (String)list.get(i).get("text");
+        String id = (String)list.get(i).get("id");
+        final String type = (String)list.get(i).get("typeS");
 
         quesId = Integer.parseInt(id);
 

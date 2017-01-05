@@ -4,12 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <ImageView
-        android:padding="5dp"
-        android:layout_gravity="center"
+    <de.hdodenhof.circleimageview.CircleImageView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/picgridviewitem_image"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:scaleType="centerInside" />
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:src="@drawable/tupian"
+        app:civ_border_width="2dp"
+        app:civ_border_color="@color/lightskyblue"
+        android:layout_margin="5dp"/>
 
 </LinearLayout>

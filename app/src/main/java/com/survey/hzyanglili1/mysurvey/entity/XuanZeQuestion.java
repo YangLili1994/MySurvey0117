@@ -10,106 +10,140 @@ import java.util.List;
 
 public class XuanZeQuestion implements Question {
 
+    private int id;
     private int surveyId;
-    private int quesId;
-    private QuestionType type;
-    private String title;
-    private String imagePath;
-    private String optionText;
-    private String optionImage;
-    private Boolean isMust;
+    private String text;
+    private int type;
+    private String typeS;
+    private Boolean required;
+    private Boolean hasPic;
+    private int totalPic;
+    private int totalOption;
+    private String titlePics;
+    private String optionTexts;
+    private String optionPics;
     private Boolean isMulti;
 
-    private String textOption;
-    private String imageOption;
 
-    private String result;
 
-    public XuanZeQuestion(int surveyId, int quesId, String title, String imagePath,Boolean isMust, Boolean isMulti,String textOption,String imageOption) {
-        this.surveyId = surveyId;
-        this.quesId = quesId;
-        this.title = title;
-        this.isMust = isMust;
+
+    public XuanZeQuestion(int id, String text, int type, String typeS) {
+        this.id = id;
+        this.text = text;
+        this.type = type;
+        this.typeS = typeS;
+    }
+
+    public XuanZeQuestion(int id, String text, int type, String typeS, Boolean required, Boolean hasPic, int totalPic, int totalOption, String titlePics, String optionTexts, String optionPics, Boolean isMulti) {
+        this.id = id;
+        this.text = text;
+        this.type = type;
+        this.typeS = typeS;
+        this.required = required;
+        this.hasPic = hasPic;
+        this.totalPic = totalPic;
+        this.totalOption = totalOption;
+        this.titlePics = titlePics;
+        this.optionTexts = optionTexts;
+        this.optionPics = optionPics;
         this.isMulti = isMulti;
-        this.imagePath = imagePath;
-        this.textOption = textOption;
-        this.imageOption = imageOption;
-    }
-
-    public String getResult() {
-        return result;
-    }
-
-    public void setResult(String result) {
-        this.result = result;
     }
 
     @Override
     public int getSurveyId() {
-        return surveyId;
+        return 0;
     }
 
     @Override
-    public int getQuestionId() {
-        return quesId;
+    public int getId() {
+        return id;
     }
 
-    @Override
-    public QuestionType getType() {
-        return QuestionType.XUANZE;
+    public int getType() {
+        return type;
     }
 
-    @Override
-    public String getTitle() {
-        return title;
-    }
 
-    @Override
-    public Boolean getIsMust() {
-        return isMust;
-    }
-
-    @Override
-    public Boolean getIsMulti() {
+    public Boolean getMulti() {
         return isMulti;
     }
 
+
     @Override
-    public String getImagePath() {
-        return imagePath;
+    public String getText() {
+        return text;
     }
 
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public void setMust(Boolean must) {
-        isMust = must;
-    }
-
-    public void setMulti(Boolean multi) {
-        isMulti = multi;
+    public void setText(String text) {
+        this.text = text;
     }
 
     @Override
-    public String getImageOption() {
-        return imageOption;
+    public String getTypeS() {
+        return typeS;
     }
 
-    public void setImageOption(String imageOption) {
-        this.imageOption = imageOption;
+    public void setTypeS(String typeS) {
+        this.typeS = typeS;
     }
 
     @Override
-    public String getTextOption() {
-        return textOption;
+    public int getRequired() {
+        return 0;
     }
 
-    public void setTextOption(String textOption) {
-        this.textOption = textOption;
+    public void setRequired(Boolean required) {
+        this.required = required;
+    }
+
+    @Override
+    public int getHasPic() {
+        return 0;
+    }
+
+    public void setHasPic(Boolean hasPic) {
+        this.hasPic = hasPic;
+    }
+
+    @Override
+    public int getTotalPic() {
+        return totalPic;
+    }
+
+    public void setTotalPic(int totalPic) {
+        this.totalPic = totalPic;
+    }
+
+    public int getTotalOption() {
+        return totalOption;
+    }
+
+    public void setTotalOption(int totalOption) {
+        this.totalOption = totalOption;
+    }
+
+    @Override
+    public String getTitlePics() {
+        return titlePics;
+    }
+
+    public void setTitlePics(String titlePics) {
+        this.titlePics = titlePics;
+    }
+
+    public String getOptionTexts() {
+        return optionTexts;
+    }
+
+    public void setOptionTexts(String optionTexts) {
+        this.optionTexts = optionTexts;
+    }
+
+    public String getOptionPics() {
+        return optionPics;
+    }
+
+    public void setOptionPics(String optionPics) {
+        this.optionPics = optionPics;
     }
 }

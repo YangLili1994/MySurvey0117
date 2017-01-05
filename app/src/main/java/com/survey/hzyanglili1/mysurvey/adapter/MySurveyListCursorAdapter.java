@@ -3,6 +3,7 @@ package com.survey.hzyanglili1.mysurvey.adapter;
 import android.content.Context;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,8 +13,10 @@ import android.widget.CompoundButton;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.survey.hzyanglili1.mysurvey.R;
+import com.survey.hzyanglili1.mysurvey.activity.edit.MySurveiesActivity;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,8 +31,9 @@ import java.util.Set;
 public class MySurveyListCursorAdapter extends CursorAdapter {
 
     public interface CallBack{
-        abstract void itemClickHandler(int surveyId);
-        abstract void notifyCheckButtonChange(int count);
+        abstract void onItemClicked(int surveyId,String title);
+        abstract void onItemLongClicked(int surveyId,String surveyName);
+        abstract void onPublicBtClicked(int surveyId,Boolean selected,int pos);
     }
 
     private Context context;
@@ -39,11 +43,10 @@ public class MySurveyListCursorAdapter extends CursorAdapter {
     private int count = 0;
     private HashSet<Integer> surveyIds = new HashSet<>();
 
-    public MySurveyListCursorAdapter(Context context, Cursor c, int flags,Boolean isEdit, CallBack callBack) {
+    public MySurveyListCursorAdapter(Context context, Cursor c, int flags,CallBack callBack) {
         super(context, c, flags);
         this.context = context;
         this.callBack = callBack;
-        this.isEdit = isEdit;
     }
 
     class ViewHolder{
@@ -51,7 +54,7 @@ public class MySurveyListCursorAdapter extends CursorAdapter {
         TextView surveyName;
         TextView surveyDesc;
 
-        CheckBox checkBox;
+        ImageView publicBt;
     }
 
     /**
@@ -62,7 +65,7 @@ public class MySurveyListCursorAdapter extends CursorAdapter {
      * @return
      */
     @Override
-    public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
+    public View newView(final Context context, Cursor cursor, ViewGroup viewGroup) {
         ViewHolder viewHolder = new ViewHolder();
 
         LayoutInflater inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -71,23 +74,11 @@ public class MySurveyListCursorAdapter extends CursorAdapter {
         viewHolder.id = (TextView)view.findViewById(R.id.item_mysurveylistcursoradapter_surveyid);
         viewHolder.surveyName = (TextView)view.findViewById(R.id.item_mysurveylistcursoradapter_surveyname);
         viewHolder.surveyDesc = (TextView)view.findViewById(R.id.item_mysurveylistcursoradapter_surveydesc);
-        viewHolder.checkBox = (CheckBox) view.findViewById(R.id.item_mysurveylistcursoradapter_checkbox);
+        viewHolder.publicBt = (ImageView) view.findViewById(R.id.item_mysurveylistcursoradapter_public);
 
         view.setTag(viewHolder);
+
         return view;
-    }
-
-    public int[] getSelectedSurveyIds(){
-        int[] Ids = null;
-
-        Ids = new int[surveyIds.size()];
-        int i = 0;
-
-        for (Integer s : surveyIds){
-            Ids[i++] = s;
-        }
-
-        return Ids;
     }
 
     /**
@@ -97,55 +88,60 @@ public class MySurveyListCursorAdapter extends CursorAdapter {
      * @param cursor
      */
     @Override
-    public void bindView(View view, Context context, Cursor cursor) {
+    public void bindView(View view, final Context context, final Cursor cursor) {
 
         final ViewHolder viewHolder= (ViewHolder)view.getTag();
 
-        view.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String surveyId = ((TextView)view.findViewById(R.id.item_mysurveylistcursoradapter_surveyid)).getText().toString().trim();
-                Log.d("haha","surveyid = "+surveyId);
+        final int id = cursor.getInt(cursor.getColumnIndex("id"));
+        final String name = cursor.getString(cursor.getColumnIndex("title"));
+        String desc = cursor.getString(cursor.getColumnIndex("intro"));
+        int status = cursor.getInt(cursor.getColumnIndex("status"));
 
-                if(!isEdit){
-                    callBack.itemClickHandler(Integer.parseInt(surveyId));
-                }else {
-                    viewHolder.checkBox.setChecked(!viewHolder.checkBox.isChecked());
-                }
-
-            }
-        });
+        final int pos = cursor.getPosition();
 
 
-
-        final int id = cursor.getInt(cursor.getColumnIndex("survey_id"));
-        String name = cursor.getString(cursor.getColumnIndex("survey_name"));
-        String desc = cursor.getString(cursor.getColumnIndex("survey_desc"));
 
         viewHolder.id.setText(""+id);
         viewHolder.surveyName.setText(name);
         viewHolder.surveyDesc.setText(desc);
 
-        if (isEdit){
-            viewHolder.checkBox.setVisibility(View.VISIBLE);
-
-            viewHolder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-
-                    if (b){
-                        surveyIds.add(id);
-                        count++;
-                    }else {
-                        count--;
-                        surveyIds.remove(id);
-                    }
-
-                    callBack.notifyCheckButtonChange(count);
-
-                }
-            });
+        if (status == 2){
+            viewHolder.publicBt.setSelected(true);
         }
+
+        viewHolder.publicBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ImageView imageView = (ImageView) view;
+//                if (imageView.isSelected()){
+//                    imageView.setSelected(false);
+//                }else {
+//                    imageView.setSelected(true);
+//                }
+
+                Log.d("haha","cursor.getPosition()   "+pos);
+
+                callBack.onPublicBtClicked(id,imageView.isSelected(),pos);
+
+            }
+        });
+
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                callBack.onItemClicked(id,name);
+
+            }
+        });
+
+        view.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+
+                callBack.onItemLongClicked(id,name);
+                return true;
+            }
+        });
 
     }
 }

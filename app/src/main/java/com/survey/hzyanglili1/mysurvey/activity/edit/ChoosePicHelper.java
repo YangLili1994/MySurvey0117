@@ -67,7 +67,7 @@ public class ChoosePicHelper {
      * @param intent
      * @return
      */
-    public Uri geturi(android.content.Intent intent) {
+    public Uri geturi(Intent intent) {
         Uri uri = intent.getData();
         String type = intent.getType();
         if (uri.getScheme().equals("file") && (type.contains("image/"))) {

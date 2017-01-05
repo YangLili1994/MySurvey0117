@@ -68,16 +68,20 @@ public class QuestionSelectActivity extends Activity {
                 switch (i){
                     case 0:
                         Log.d(TAG,"单选题");
-                        Intent intent = new Intent(QuestionSelectActivity.this,CreateSingleQuestionActivity.class);
-                        intent.putExtra("survey_id",surveyId);
+                        Intent intent = new Intent(QuestionSelectActivity.this,XuanZeQActivity.class);
+                        intent.putExtra("surveyId",surveyId);
                         intent.putExtra("isMultiOption",false);
+                        intent.putExtra("isNew",true);
+                        intent.putExtra("ques_id",0);
                         startActivity(intent);
                         finish();
                         break;
                     case 1:
-                        Intent intent1 = new Intent(QuestionSelectActivity.this,CreateSingleQuestionActivity.class);
-                        intent1.putExtra("survey_id",surveyId);
+                        Intent intent1 = new Intent(QuestionSelectActivity.this,XuanZeQActivity.class);
+                        intent1.putExtra("surveyId",surveyId);
                         intent1.putExtra("isMultiOption",true);
+                        intent1.putExtra("isNew",true);
+                        intent1.putExtra("ques_id",0);
                         startActivity(intent1);
                         finish();
                         Log.d(TAG,"多选题");
@@ -85,7 +89,7 @@ public class QuestionSelectActivity extends Activity {
                     case 2:
                         Log.d(TAG,"填空题");
                         Intent intent2 = new Intent(QuestionSelectActivity.this,TiankongQuesActivity.class);
-                        intent2.putExtra("survey_id",surveyId);
+                        intent2.putExtra("surveyId",surveyId);
                         intent2.putExtra("isNew",true);
                         intent2.putExtra("ques_id",0);
                         startActivity(intent2);
@@ -94,7 +98,7 @@ public class QuestionSelectActivity extends Activity {
                     case 3:
                         Log.d(TAG,"程度题");
                         Intent intent3 = new Intent(QuestionSelectActivity.this,ChengduQuestionActivity.class);
-                        intent3.putExtra("survey_id",surveyId);
+                        intent3.putExtra("surveyId",surveyId);
                         intent3.putExtra("isNew",true);
                         intent3.putExtra("ques_id",0);
                         startActivity(intent3);

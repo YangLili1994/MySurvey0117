@@ -53,6 +53,7 @@
         android:layout_height="wrap_content"
         android:textSize="15sp"
         android:background="@drawable/edittext_bg_normal"
-        android:textColor="@color/alpha_65_black"/>
+        android:textColor="@color/alpha_65_black"
+        android:minHeight="50dp"/>
 
 </LinearLayout>

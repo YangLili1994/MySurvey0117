@@ -9,46 +9,79 @@ import java.util.List;
 
 public class Survey {
     //问卷id
-    private int surveyId;
+    private int id;
+    //问卷status
+    private int status;
     //问卷名称
-    private String surveyName;
+    private String title;
     //问卷描述
-    private String surveyDesc;
-    //问卷题目
-    private List<Question> questionLists = new ArrayList<>();
+    private String intro;
+    private String date;
+    private String change;
 
-    public Survey(int surveyId,String surveyName,String surveyDesc) {
-        this.surveyName = surveyName;
-        this.surveyId = surveyId;
-        this.surveyDesc = surveyDesc;
+
+
+    public Survey(int id, int status, String title, String intro, String date, String change) {
+        this.id = id;
+        this.status = status;
+        this.title = title;
+        this.intro = intro;
+        this.date = date;
+        this.change = change;
     }
 
-    public int getSurveyId() {
-        return surveyId;
+    @Override
+    public String toString() {
+
+        String result = "survey : id "+id+" title "+title+" intro "+intro;
+        return result;
     }
 
-    public void setSurveyId(int surveyId) {
-        this.surveyId = surveyId;
+    public int getId() {
+        return id;
     }
 
-    public String getSurveyName() {
-        return surveyName;
+    public void setId(int id) {
+        this.id = id;
     }
 
-    public void setSurveyName(String surveyName) {
-        this.surveyName = surveyName;
+    public int getStatus() {
+        return status;
     }
 
-    public String getSurveyDesc() {
-        return surveyDesc;
+    public void setStatus(int status) {
+        this.status = status;
     }
 
-    public void setSurveyDesc(String surveyDesc) {
-        this.surveyDesc = surveyDesc;
+    public String getTitle() {
+        return title;
     }
 
-    public List<Question> getQuestionLists() {
-        return questionLists;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
+    public String getIntro() {
+        return intro;
+    }
+
+    public void setIntro(String intro) {
+        this.intro = intro;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public String getChange() {
+        return change;
+    }
+
+    public void setChange(String change) {
+        this.change = change;
+    }
 }

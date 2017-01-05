@@ -59,7 +59,7 @@ public class CanDragProgressView extends View implements OnTouchListener,OnClick
 
     private DragListener mDragListener;//滑动监听
     public interface DragListener{
-        public void onDrag(CanDragProgressView view,float value);
+        public void onDrag(CanDragProgressView view, float value);
     }
 
     public DragListener getmDragListener() {

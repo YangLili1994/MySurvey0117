@@ -34,6 +34,7 @@
             android:textSize="16sp"
             android:layout_marginRight="70dp"/>
 
+
         <TextView
             android:id="@+id/activity_main_show"
             android:layout_width="wrap_content"

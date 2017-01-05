@@ -4,13 +4,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="10dp"
-    android:layout_margin="20dp"
     android:background="@drawable/option_border">
-    <ImageView
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/item_questionoption_image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/tupian"/>
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@drawable/tupian"
+        android:layout_margin="5dp"
+       />
 
     <EditText
         android:id="@+id/item_questionoption_title"
@@ -19,6 +22,8 @@
         android:layout_height="wrap_content"
         android:hint="请输入选项文字"
         android:textColorHint="@color/alpha_25_black"
+        android:textColor="@color/wordlevel2"
+        android:textSize="15sp"
         android:background="@null"
         android:layout_gravity="center_vertical"
         />

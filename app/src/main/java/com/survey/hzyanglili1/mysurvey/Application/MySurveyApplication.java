@@ -15,8 +15,13 @@ import android.view.WindowManager;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
 import com.survey.hzyanglili1.mysurvey.entity.Survey;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +32,20 @@ import java.util.List;
 public class MySurveyApplication extends Application {
 
     public static List<Survey> surveyList = new ArrayList<>();
+
+    //对图片进行二进制转换
+    public static byte[] getValue(String imagePath) {
+
+        Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream() ;
+        bitmap.compress(Bitmap.CompressFormat.JPEG,80,bos) ;
+
+        return bos.toByteArray();
+    }
+
+
+
 
 
     /**动态改变listView的高度*/
@@ -137,6 +156,56 @@ public class MySurveyApplication extends Application {
             }
         }
         return inSampleSize;
+    }
+
+
+    /**
+     * 图片的质量压缩方法
+     *
+     * @param image
+     * @return
+     */
+    public static Bitmap compressImage(Bitmap image)
+    {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        image.compress(Bitmap.CompressFormat.JPEG, 100, baos);// 质量压缩方法，这里100表示不压缩，把压缩后的数据存放到baos中
+        int options = 100;
+        while (baos.toByteArray().length / 1024 > 100)
+        { // 循环判断如果压缩后图片是否大于100kb,大于继续压缩
+            baos.reset();// 重置baos即清空baos
+            image.compress(Bitmap.CompressFormat.JPEG, options, baos);// 这里压缩options%，把压缩后的数据存放到baos中
+            options -= 10;// 每次都减少10
+        }
+        ByteArrayInputStream isBm = new ByteArrayInputStream(baos.toByteArray());// 把压缩后的数据baos存放到ByteArrayInputStream中
+        Bitmap bitmap = BitmapFactory.decodeStream(isBm, null, null);// 把ByteArrayInputStream数据生成图片
+        if (baos != null)
+        {
+            try
+            {
+                baos.close();
+            } catch (IOException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        if (isBm != null)
+        {
+            try
+            {
+                isBm.close();
+            } catch (IOException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        if (image != null && !image.isRecycled())
+        {
+            image.recycle();
+            image = null;
+        }
+        return bitmap;
     }
 
 

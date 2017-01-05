@@ -6,8 +6,13 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.survey.hzyanglili1.mysurvey.Application.Constants;
+import com.survey.hzyanglili1.mysurvey.entity.ChengduQuestion;
+import com.survey.hzyanglili1.mysurvey.entity.DanXuanQuestion;
+import com.survey.hzyanglili1.mysurvey.entity.DuoXuanQuestion;
 import com.survey.hzyanglili1.mysurvey.entity.Question;
 import com.survey.hzyanglili1.mysurvey.entity.Survey;
+import com.survey.hzyanglili1.mysurvey.entity.TiankongQuestion;
+import com.survey.hzyanglili1.mysurvey.entity.XuanZeQuestion;
 
 /**
  * Created by hzyanglili1 on 2016/11/7.
@@ -29,24 +34,45 @@ public class QuestionTableDao {
      * @param question
      */
     public void addQuestion(Question question){
+
+        if (selectQuestionByQuestionId(question.getId()) != null){
+            deleteQuestion(question.getId());
+        }
         //得到数据库
         db = dbHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put("survey_id",question.getSurveyId());
-        values.put("question_id",question.getQuestionId());
-        values.put("question_type",questionType2int(question.getType()));
-        values.put("question_title",question.getTitle());
-        values.put("question_image",question.getImagePath());
-        values.put("qustion_ismust",question.getIsMust());
-        values.put("question_ismulti",question.getIsMulti());
-        values.put("option_text",question.getTextOption());
-        values.put("option_image",question.getImageOption());
+        values.put("surveyId",question.getSurveyId());
+        values.put("id",question.getId());
+        values.put("text",question.getText());
+        values.put("type",question.getType());
+        values.put("typeS",question.getTypeS());
+        values.put("required",question.getRequired());
+        values.put("hasPic",question.getHasPic());
+        values.put("pics", question.getTitlePics());
+        values.put("optionTexts",question.getOptionTexts());
+        values.put("optionPics",question.getOptionPics());
+        values.put("totalPic",question.getTotalPic());
+        values.put("totalOption",question.getTotalOption());
 
         db.insert(Constants.QUESTIONS_TABLENAME,null,values);
 
         Log.d(TAG,"add survey success");
     }
+
+    /**
+     * 根据调查问卷id删除survey所有问题
+     * @param id
+     */
+    public void deleltSurveyAllQues(int id){
+        //得到数据库
+        db = dbHelper.getWritableDatabase();
+
+        String sql1 = "delete from "+Constants.QUESTIONS_TABLENAME + " where surveyId = ?";
+
+        db.execSQL(sql1,new String[]{id+""});
+    }
+
 
     /**
      * 删除
@@ -56,9 +82,11 @@ public class QuestionTableDao {
         //得到数据库
         db = dbHelper.getWritableDatabase();
 
-        String sql = "delete from "+Constants.QUESTIONS_TABLENAME+" where question_id = ?";
+        String sql = "delete from "+Constants.QUESTIONS_TABLENAME+" where id = ?";
 
         db.execSQL(sql,new Integer[]{questionId});
+
+        Log.d("haha","delete question success.");
     }
 
     /**
@@ -70,9 +98,47 @@ public class QuestionTableDao {
         //得到数据库
         db = dbHelper.getWritableDatabase();
 
-        String sql = "update "+Constants.QUESTIONS_TABLENAME +" set question_title = ?,question_image = ?,qustion_ismust = ?,question_ismulti = ?,option_text = ?,option_image = ? where question_id = ?";
+        String sql = "update "+Constants.QUESTIONS_TABLENAME +" set text = ?,required = ?,hasPic = ?,pics = ?,optionTexts = ?,optionPics = ? ,totalPic = ? ,totalOption = ? where id = ?";
 
-        db.execSQL(sql,new Object[]{question.getTitle(),question.getImagePath(),question.getIsMust(),question.getIsMulti(),question.getTextOption(),question.getImageOption(),question.getQuestionId()});
+        db.execSQL(sql,new Object[]{question.getText(),question.getRequired(),question.getHasPic(),question.getTitlePics(),question.getOptionTexts(),question.getOptionPics(),question.getTotalPic(),question.getTotalOption(),questionId});
+    }
+
+
+    public void updateQTitlePic(int quesId,String pics){
+        //得到数据库
+        db = dbHelper.getWritableDatabase();
+
+        String sql = "update "+Constants.QUESTIONS_TABLENAME +" set pics = ? where id = ?";
+
+        db.execSQL(sql,new Object[]{pics,quesId});
+    }
+
+
+    public void updateQOptionPic(int quesId,String pics){
+        //得到数据库
+        db = dbHelper.getWritableDatabase();
+
+        String sql = "update "+Constants.QUESTIONS_TABLENAME +" set optionPics = ? where id = ?";
+
+        db.execSQL(sql,new Object[]{pics,quesId});
+    }
+
+    /**
+     * 获得question表的最大id
+     * @return  -1表示查询出错
+     */
+    public int getMaxQuesId(){
+
+        String sql = "select * from "+Constants.QUESTIONS_TABLENAME+" order by id desc ";
+        Cursor cursor = dbHelper.getReadableDatabase().rawQuery(sql,null);
+
+        if (cursor.moveToNext()){
+            return cursor.getInt(cursor.getColumnIndex("id"));
+        }else {
+            return -1;//表示没有查询到
+        }
+
+
     }
 
     /**
@@ -80,26 +146,42 @@ public class QuestionTableDao {
      * @param questionId1
      * @param questionId2
      */
-    public void exchangeQuestion(int questionId1,int questionId2){
+    public Boolean exchangeQuestion(int questionId1,int questionId2){
         //得到数据库
         db = dbHelper.getWritableDatabase();
 
+        int id1 = -1;
+        int id2 = -1;
+
         Cursor cursor = selectQuestionByQuestionId(questionId1);
-        cursor.moveToNext();
-        int id1 = cursor.getInt(0);
+        if(cursor.moveToNext()){
+            id1 = cursor.getInt(0);
+        }
+
 
         Log.d("lala","the _id = "+id1);
 
-        Cursor cursor1 = selectQuestionByQuestionId(questionId2);
-        cursor1.moveToNext();
-        int id2 = cursor1.getInt(0);
+        Cursor cursor2 = selectQuestionByQuestionId(questionId2);
+        if(cursor2.moveToNext()){
+            id2 = cursor2.getInt(0);
+        }
 
         Log.d("lala","last _id = "+id2);
 
-        String sql = "update "+Constants.QUESTIONS_TABLENAME +" set question_id = ? where _id = ?";
+        if (id1 != -1 && id2 != -1){
+            String sql = "update "+Constants.QUESTIONS_TABLENAME +" set id = ? where _id = ?";
 
-        db.execSQL(sql,new Object[]{questionId2,id1});
-        db.execSQL(sql,new Object[]{questionId1,id2});
+            db.execSQL(sql,new Object[]{questionId2,id1});
+            db.execSQL(sql,new Object[]{questionId1,id2});
+
+            Log.d("haha",TAG+"   exchangeQuestion success.");
+
+            return true;
+        }
+
+        Log.d("haha",TAG+"   exchangeQuestion failed.");
+        return false;
+
     }
 
     /**
@@ -130,7 +212,7 @@ public class QuestionTableDao {
         //得到数据库
         db = dbHelper.getWritableDatabase();
 
-        String sql = "select * from "+Constants.QUESTIONS_TABLENAME+" where question_id = ?";
+        String sql = "select * from "+Constants.QUESTIONS_TABLENAME+" where id = ?";
 
         cursor = db.rawQuery(sql,new String[]{questionId+""});
 
@@ -143,7 +225,7 @@ public class QuestionTableDao {
         //得到数据库
         db = dbHelper.getWritableDatabase();
 
-        String sql = "select * from "+Constants.QUESTIONS_TABLENAME+" where survey_id = ? order by question_id";
+        String sql = "select * from "+Constants.QUESTIONS_TABLENAME+" where surveyId = ? order by id";
 
         cursor = db.rawQuery(sql,new String[]{surveyId+""});
 
@@ -156,7 +238,7 @@ public class QuestionTableDao {
         //得到数据库
         db = dbHelper.getWritableDatabase();
 
-        String sql = "select * from "+Constants.QUESTIONS_TABLENAME+" where survey_id = ?";
+        String sql = "select * from "+Constants.QUESTIONS_TABLENAME+" where surveyId = ?";
 
         Cursor cursor = db.rawQuery(sql,new String[]{surveyId+""});
         cursor.moveToNext();
@@ -193,5 +275,56 @@ public class QuestionTableDao {
                 break;
         }
         return type;
+    }
+
+    public Question cursor2Ques(Cursor cursor){
+
+        int type = cursor.getInt(cursor.getColumnIndex("type"));
+
+        String surveyId = cursor.getString(cursor.getColumnIndex("surveyId"));
+        int id = cursor.getInt(cursor.getColumnIndex("id"));
+        String text = cursor.getString(cursor.getColumnIndex("text"));
+        String pics = cursor.getString(cursor.getColumnIndex("pics"));
+        String typeS = cursor.getString(cursor.getColumnIndex("typeS"));
+        String optionTexts = cursor.getString(cursor.getColumnIndex("optionTexts"));
+        String optionPics = cursor.getString(cursor.getColumnIndex("optionPics"));
+        int required = cursor.getInt(cursor.getColumnIndex("required"));
+        int hasPic = cursor.getInt(cursor.getColumnIndex("hasPic"));
+        int totalOption = cursor.getInt(cursor.getColumnIndex("totalOption"));
+        int totalPic = cursor.getInt(cursor.getColumnIndex("totalPic"));
+
+
+        Question question = null;
+
+        switch (type){
+            case 1://单选
+                question = new DanXuanQuestion(Integer.parseInt(surveyId),id,text,type,typeS,required,hasPic,totalPic,totalOption,pics,optionTexts,optionPics);
+                break;
+            case 2://多选
+                question = new DuoXuanQuestion(Integer.parseInt(surveyId),id,text,type,typeS,required,hasPic,totalPic,totalOption,pics,optionTexts,optionPics);
+                break;
+            case 3://填空
+                question = new TiankongQuestion(Integer.parseInt(surveyId),id,text,type,typeS,required,hasPic,totalPic,pics);
+                break;
+            case 4://程度
+                String[]  texts = optionTexts.split("\\$");
+                String[] vals = optionPics.split("\\$");
+
+                String minText = "";
+                String maxText = "";
+                int minVal = 0;
+                int maxVal = 5;
+
+                if (texts.length >=2 && vals.length >= 2) {
+                    minText = texts[1];
+                    maxText = texts[0];
+                    minVal = Integer.parseInt(vals[1]);
+                    maxVal = Integer.parseInt(vals[0]);
+                }
+
+                question = new ChengduQuestion(Integer.parseInt(surveyId),id,text,type,typeS,required,hasPic,totalPic,pics,minText,maxText,minVal,maxVal);
+                break;
+        }
+        return question;
     }
 }

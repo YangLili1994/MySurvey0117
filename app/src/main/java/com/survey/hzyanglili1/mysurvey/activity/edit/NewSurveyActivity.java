@@ -20,6 +20,7 @@ import com.survey.hzyanglili1.mysurvey.db.DBHelper;
 import com.survey.hzyanglili1.mysurvey.db.SurveyTableDao;
 import com.survey.hzyanglili1.mysurvey.entity.Survey;
 import com.survey.hzyanglili1.mysurvey.utils.CountHelper;
+import com.survey.hzyanglili1.mysurvey.utils.TimeUtil;
 
 /**
  * Created by hzyanglili1 on 2016/10/31.
@@ -72,7 +73,7 @@ public class NewSurveyActivity extends BaseActivity {
                     Log.d(TAG,"添加survey成功");
 
                     Intent intent = new Intent(NewSurveyActivity.this, StartSurveyActivity.class);
-                    intent.putExtra("survey_id",surveyId);
+                    intent.putExtra("survey_id",0);
                     startActivity(intent);
 
                     finish();
@@ -95,16 +96,12 @@ public class NewSurveyActivity extends BaseActivity {
                 imm.toggleSoftInput(0, InputMethodManager.HIDE_NOT_ALWAYS);
             }
 
-//            CountHelper countHelper = CountHelper.getInstance(this);
-//            surveyId = countHelper.getSurveyCount();
-//            countHelper.setSurveyCount(surveyId + 1);
 
             SurveyTableDao surveyTableDao = new SurveyTableDao(new DBHelper(NewSurveyActivity.this, 1));
 
-            surveyId = surveyTableDao.getAllCount();
 
-            //生成问卷
-            Survey survey = new Survey(surveyId, surveyName, surveyDesc);
+            //生成问卷  id=0默认新建问卷
+            Survey survey = new Survey(0, 1,surveyName, surveyDesc, TimeUtil.getCurTime(),TimeUtil.getCurTime());
 
             //把问卷添加到db
 
