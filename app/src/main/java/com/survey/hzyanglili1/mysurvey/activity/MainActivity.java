@@ -17,6 +17,7 @@ import com.survey.hzyanglili1.mysurvey.R;
 import com.survey.hzyanglili1.mysurvey.activity.edit.MySurveiesActivity;
 import com.survey.hzyanglili1.mysurvey.activity.edit.SurveyPrelookActivity;
 import com.survey.hzyanglili1.mysurvey.activity.use.SurveyListActivity;
+import com.survey.hzyanglili1.mysurvey.service.NetworkStateService;
 import com.survey.hzyanglili1.mysurvey.utils.CountHelper;
 
 import java.util.ArrayList;
@@ -35,6 +36,10 @@ public class MainActivity extends BaseActivity {
 
         showBt = (TextView)findViewById(R.id.activity_main_show) ;
         editBt = (TextView)findViewById(R.id.activity_main_edit);
+
+        //开启网络状态监控
+        Intent intent = new Intent(this, NetworkStateService.class);
+        startService(intent);
 
 
         showBt.setOnClickListener(new View.OnClickListener() {
@@ -55,16 +60,6 @@ public class MainActivity extends BaseActivity {
         });
 
 
-
-        CountHelper countHelper = CountHelper.getInstance(this);
-        countHelper.setSurveyCount(1);
-        Log.d("haha","surveycount = "+countHelper.getSurveyCount());
-
-        countHelper.setOptionCount(2);
-        Log.d("haha","optioncount = "+countHelper.getOptionCount());
-
-        countHelper.setQuestionCount(3);
-        Log.d("haha","quescount = "+countHelper.getQuestionCount());
 
 
 

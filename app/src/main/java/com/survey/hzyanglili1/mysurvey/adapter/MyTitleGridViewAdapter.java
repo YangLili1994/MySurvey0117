@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -47,8 +48,6 @@ public class MyTitleGridViewAdapter extends BaseAdapter {
         this.imagePaths = imagePaths;
         this.listenner = listenner;
         this.requestQueue = requestQueue;
-
-
     }
 
     @Override
@@ -78,57 +77,65 @@ public class MyTitleGridViewAdapter extends BaseAdapter {
         return i;
     }
 
+    static class ViewHolder{
+        CircleImageView cImageView;
+    }
+
 
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
 
-        final CircleImageView circleImageView;
-        if (view == null){
-            //circleImageView = (CircleImageView) LayoutInflater.from(context).inflate(R.layout.picgridview_item,null);
-            circleImageView = new CircleImageView(context);
-        }else {
-            circleImageView = (CircleImageView) view;
+        ViewHolder viewHolder = null;
+
+        if (view == null) {
+            viewHolder = new ViewHolder();
+            view = LayoutInflater.from(context).inflate(R.layout.picgridview_item, null);
+            viewHolder.cImageView = (CircleImageView) view.findViewById(R.id.picgridviewitem_image);
+            view.setTag(viewHolder);
+        } else {
+            viewHolder = (ViewHolder) view.getTag();
         }
 
-        if (i != getCount()-1){//最后一个添加图片   不设置外边框
-            circleImageView.setBorderColor(ContextCompat.getColor(context,R.color.lightskyblue));
-           circleImageView.setBorderWidth(2);
+        if (i != getCount() - 1) {//最后一个添加图片   不设置外边框
+            (viewHolder.cImageView).setBorderColor(ContextCompat.getColor(context, R.color.lightskyblue));
+            (viewHolder.cImageView).setBorderWidth(2);
         }
 
         final String picPath = imagePaths.get(i);
 
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(DensityUtil.dip2px(context,80),DensityUtil.dip2px(context,80)) ;
-        circleImageView.setLayoutParams(params);
-        circleImageView.setTag(picPath);/////重要！！设置tag  防止网络图片覆盖
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(DensityUtil.dip2px(context, 80), DensityUtil.dip2px(context, 80));
+        viewHolder.cImageView.setLayoutParams(params);
+        viewHolder.cImageView.setTag(picPath);/////重要！！设置tag  防止网络图片覆盖
+
+        final CircleImageView myView = viewHolder.cImageView;
 
 
         if (picPath.equals(Constants.KONG)) {
-            Log.d("haha","title pics show --- KONG");
-            circleImageView.setImageDrawable(ContextCompat.getDrawable(context,R.drawable.gridview_addpic));
-            circleImageView.setBorderWidth(0);
-
-            return circleImageView;
-        }else {
+            Log.d("haha", "title pics show --- KONG");
+            (viewHolder.cImageView).setImageDrawable(ContextCompat.getDrawable(context, R.drawable.gridview_addpic));
+            (viewHolder.cImageView).setBorderWidth(0);
+        } else {
             //bitmap = BitmapFactory.decodeFile(picPath);
-            bitmap = MySurveyApplication.decodeSampledBitmapFromFile(picPath,80,80);//重要！图片压缩。防止OOM
-            if (bitmap == null){
-                Log.d("haha","network image : "+picPath);
+            bitmap = MySurveyApplication.decodeSampledBitmapFromFile(picPath, 80, 80);//重要！图片压缩。防止OOM
+            if (bitmap == null) {
+                Log.d("haha", "network image : " + picPath);
+                final View finalView = view;
                 ImageRequest imageRequest = new ImageRequest(
                         picPath,
                         new Response.Listener<Bitmap>() {
                             @Override
                             public void onResponse(Bitmap response) {
-                                if (circleImageView.getTag().equals(picPath)) {
+                                if ((myView).getTag().equals(picPath)) {
                                     //因为网络获取图片比较慢   比较之后防止网络图片覆盖已经加载好的view上
-                                    circleImageView.setImageBitmap(MySurveyApplication.compressImage(response));
+                                    (myView).setImageBitmap(MySurveyApplication.compressImage(response));
                                 }
                             }
                         }, 0, 0, Bitmap.Config.RGB_565, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        if (circleImageView.getTag().equals(picPath)) {
+                        if ((myView).getTag().equals(picPath)) {
                             //因为网络获取图片比较慢   比较之后防止网络图片覆盖已经加载好的view上
-                            circleImageView.setBackground(ContextCompat.getDrawable(context,R.drawable.downloadfail));
+                            (myView).setBackground(ContextCompat.getDrawable(context, R.drawable.downloadfail));
 
                         }
 
@@ -136,15 +143,18 @@ public class MyTitleGridViewAdapter extends BaseAdapter {
                 });
                 requestQueue.add(imageRequest);
 
-                return circleImageView;
 
-            }else {
-                Log.d("haha","title pics show --- local");
-                circleImageView.setImageBitmap(bitmap);
-                return circleImageView;
+            } else {
+                Log.d("haha", "title pics show --- local");
+                (myView).setImageBitmap(bitmap);
+
             }
         }
 
+
+        return view;
     }
+
+
 
 }

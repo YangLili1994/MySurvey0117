@@ -92,6 +92,7 @@ public class MySurveiesActivity extends BaseActivity {
         }else {
             Log.d("haha",TAG+" network is not connected.");
             initViewAndEvent();
+            surveyTableDao.deleltSurvey(0);//避免新建问卷未上传而显示
             getSurveyListFromLocal();
         }
     }
@@ -115,6 +116,7 @@ public class MySurveiesActivity extends BaseActivity {
             public void onItemClicked(int surveyId,String surveyTitle) {//查看编辑问卷
 
                 Constants.Enter = false;
+                Constants.StartSurveyFirstIn = true;//用于在startsurveyactivity中判断是否备份数据
 
                 Log.d("haha","danji -- survey id "+surveyId);
                 Intent intent = new Intent(MySurveiesActivity.this,StartSurveyActivity.class);
@@ -140,6 +142,8 @@ public class MySurveiesActivity extends BaseActivity {
             public void onClick(View view) {
                 //新建问卷
                 Intent intent = new Intent(MySurveiesActivity.this,NewSurveyActivity.class);
+                intent.putExtra("surveyId",0);
+                intent.putExtra("flag",Constants.NewSurvey);
                 startActivity(intent);
                 //finish();
             }
@@ -148,7 +152,7 @@ public class MySurveiesActivity extends BaseActivity {
 
     }
 
-    private void changeSurveyStatus(int surveyId, final int status, final int pos){
+    private void changeSurveyStatus(final int surveyId, final int status, final int pos){
 
         Log.d("haha",TAG+ "  changeSurveyStatus...");
 
@@ -166,15 +170,19 @@ public class MySurveiesActivity extends BaseActivity {
 
                                 if (status == 1){
                                     Toast.makeText(MySurveiesActivity.this,"关闭问卷成功",Toast.LENGTH_SHORT).show();
-
+                                    //修改本地数据库
                                     if (publicBt.isSelected()) publicBt.setSelected(false);
+                                    surveyTableDao.updateStatus(surveyId,1);
                                 }else {
+                                    //修改本地数据库
                                     if (!publicBt.isSelected()) publicBt.setSelected(true);
                                     Toast.makeText(MySurveiesActivity.this,"发布问卷成功",Toast.LENGTH_SHORT).show();
+                                    surveyTableDao.updateStatus(surveyId,2);
                                 }
 
                             }else {//failed
 
+                                Toast.makeText(MySurveiesActivity.this,"操作失败，请重试",Toast.LENGTH_SHORT).show();
                                 Log.d("haha",TAG+"  changeSurveyStatus failed -- "+jsonObject.getString("message"));
 
                             }
@@ -207,15 +215,15 @@ public class MySurveiesActivity extends BaseActivity {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        Log.d(TAG, "surveyList response = "+response);
+                        Log.d("haha", TAG+"  surveyList response = "+response);
 
                         surveyTableDao.clearSurveyTable();
 
                         try {
                             if(ParseResponse.parseSurveyList(surveyTableDao,new JSONObject(response))){
-                                Log.d(TAG, "parse surveyList success!");
+                                Log.d("haha", TAG+"   parse surveyList success!");
                             }else{
-                                Log.d(TAG, "parse surveyList fail!");
+                                Log.d("haha", TAG+"    parse surveyList fail!");
                             }
 
                             initViewAndEvent();
@@ -277,13 +285,6 @@ public class MySurveiesActivity extends BaseActivity {
         builder.create().show();
     }
 
-    private Cursor getSurveyTitles(){
-        Cursor cursor = null;
-        SurveyTableDao dao = new SurveyTableDao(new DBHelper(this,1));
-        cursor = dao.getAll();
-        return cursor;
-    }
-
 
     private void deleSurveyOnServer(int surveyId){
         Log.d("haha","deleSurveyOnServer");
@@ -330,11 +331,9 @@ public class MySurveiesActivity extends BaseActivity {
 
     @Override
     protected void onResume() {
+        Log.d("haha",TAG+"  onResume()");
         super.onResume();
 
-//        cursorAdapter.notifyDataSetChanged();
-//        cursorAdapter = new MySurveyListCursorAdapter(this, getSurveyTitles(), 0, callBack);
-//        listView.setAdapter(cursorAdapter);
     }
 
     @Override

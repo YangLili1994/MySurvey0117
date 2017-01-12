@@ -6,7 +6,8 @@
     android:background="@color/aliceblue">
 
     <include
-        layout="@layout/custom_title"/>
+        layout="@layout/custom_title"
+        />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -23,6 +24,7 @@
                 android:orientation="vertical"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp">
+
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="10dp"
@@ -39,6 +41,12 @@
                     android:layout_gravity="center_vertical"
                     android:layout_marginLeft="3dp"
                     />
+
+                <LinearLayout
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:layout_width="0px"
+                    android:layout_height="0px"/>
 
                 <EditText
                     android:id="@+id/activity_createsinglequestion_title"

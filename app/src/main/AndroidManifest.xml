@@ -12,7 +12,8 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activity.MainActivity">
+        <activity android:name=".activity.MainActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -20,26 +21,46 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".activity.edit.MySurveiesActivity"/>
-        <activity android:name=".activity.use.SurveyListActivity"/>
+        <activity android:name=".activity.edit.MySurveiesActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait">
 
-        <activity android:name=".activity.edit.NewSurveyActivity"/>
-        <!--singtop启动-->
+        </activity>
+        <activity android:name=".activity.use.SurveyListActivity"
+            android:screenOrientation="portrait"/>
+
+        <activity android:name=".activity.edit.NewSurveyActivity"
+            android:screenOrientation="portrait"/>
+
         <activity android:name=".activity.edit.StartSurveyActivity"
+            android:screenOrientation="portrait"
             >
         </activity>
-        <activity android:name=".activity.edit.QuestionSelectActivity"/>
-        <activity android:name=".activity.edit.XuanZeQActivity"/>
-        <activity android:name=".activity.edit.TiankongQuesActivity"/>
-        <activity android:name=".activity.edit.ChengduQuestionActivity"/>
+        <activity android:name=".activity.edit.QuestionSelectActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".activity.edit.XuanZeQActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".activity.edit.TiankongQuesActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".activity.edit.ChengduQuestionActivity"
+            android:screenOrientation="portrait"/>
 
-        <activity android:name=".activity.edit.SurveyPrelookActivity"/>
+        <activity android:name=".activity.edit.SurveyPrelookActivity"
+            android:screenOrientation="portrait"/>
 
-        <activity android:name=".activity.edit.ShowImageActivity"/>
+        <activity android:name=".activity.edit.ShowImageActivity"
+            android:screenOrientation="portrait"/>
 
-        <activity android:name=".activity.edit.PrelookShowImageActivity"/>
-        <activity android:name=".activity.use.ResultListActivity"/>
-        <activity android:name=".activity.edit.ZoomImageActivity"/>
+        <activity android:name=".activity.edit.PrelookShowImageActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".activity.use.ResultListActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".activity.edit.ZoomImageActivity"
+            android:screenOrientation="portrait"/>
+
+
+        <service android:name=".service.NetworkStateService"
+            android:screenOrientation="portrait"/>
 
     </application>
 

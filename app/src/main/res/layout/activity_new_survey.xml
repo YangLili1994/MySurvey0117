@@ -12,6 +12,12 @@
         android:layout_height="8dp"
         android:background="@color/divide_05_black" />
 
+    <View
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:layout_width="0px"
+        android:layout_height="0px"/>
+
     <LinearLayout
         android:padding="20dp"
         android:layout_width="match_parent"
@@ -22,16 +28,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/surveyname"
-            android:textSize="18sp"
-            android:textColor="@color/maincolor"/>
+            android:textSize="16sp"
+            android:textColor="@color/wordlevel1"
+            android:layout_marginBottom="10dp"/>
         <EditText
             android:id="@+id/activity_newsurvey_surveyname"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:hint="@string/surveynamehint"
             android:textSize="16sp"
             android:textColorHint="@color/wordlevel2"
             android:textColor="@color/wordlevel2"
+            android:background="@drawable/edittext_bg_normal"
             />
 
     </LinearLayout>
@@ -46,16 +53,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/surveydescription"
-            android:textSize="18sp"
-            android:textColor="@color/maincolor"/>
+            android:textSize="16sp"
+            android:textColor="@color/wordlevel1"
+            android:layout_marginBottom="10dp"/>
         <EditText
             android:id="@+id/activity_newsurvey_surveydesc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/surveydescriptionhint"
             android:textSize="16sp"
             android:textColorHint="@color/wordlevel2"
             android:textColor="@color/wordlevel2"
+            android:background="@drawable/edittext_bg_normal"
+            android:minHeight="100dp"
             />
 
     </LinearLayout>

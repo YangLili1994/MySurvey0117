@@ -79,7 +79,7 @@ public class VolleyUtil {
 
     public static void showImageByVolley(RequestQueue requestQueue, String imagePath, final ImageView imageView){
 
-        Log.d("haha","network image : "+imagePath);
+        //Log.d("haha","network image : "+imagePath);
 
         ImageLoader loader = new ImageLoader(requestQueue,new BitmapCache());
 
@@ -88,9 +88,7 @@ public class VolleyUtil {
 
     }
 
-    public static void uploadSurvey(int surveyId, SurveyTableDao dao){
 
-    }
 
     public static JSONObject survey2Json(int surveyId, SurveyTableDao surveyTableDao, QuestionTableDao questionTableDao){
         JSONObject object = new JSONObject();
@@ -106,8 +104,6 @@ public class VolleyUtil {
         Cursor cursor1 = questionTableDao.selectQuestionBySurveyId(surveyId);
         while (cursor1.moveToNext()){
             Question question = questionTableDao.cursor2Ques(cursor1);
-
-           // Log.d("haha","volleyutil "+question.toString());
 
             if (question != null){
                 JSONObject object1 = question2Json(question);
@@ -151,12 +147,8 @@ public class VolleyUtil {
         if (totalPic > 0){
             String[] titlePics = question.getTitlePics().toString().split("\\$");
 
-            if (totalPic != titlePics.length) {
-              //  Log.d("haha","totalPic != titlePics.length");
-                return null;
-            }
 
-            for (int i = 0;i<totalPic;i++){
+            for (int i = 0;i<Math.min(totalPic,titlePics.length);i++){
                 pics.put(titlePics[i]);
             }
         }
@@ -186,11 +178,19 @@ public class VolleyUtil {
                 String[] oTexts = optionTexts.split("\\$");
                 String[] oPics = optionPics.split("\\$");
 
+                totalOption = Math.min(totalOption,oTexts.length);
+                totalOption = Math.min(totalOption,oPics.length);
+
                 if (totalOption>0){
 
                     for (int i = 0;i<totalOption;i++) {
                         JSONObject option = new JSONObject();
                         try {
+
+
+                            if (oTexts[i].equals("null")){
+                                oTexts[i] = "";
+                            }
                             option.put("text", oTexts[i]);
 
                             String path = "";
@@ -235,11 +235,18 @@ public class VolleyUtil {
                 String[] oTexts1 = optionTexts.split("\\$");
                 String[] oPics1 = optionPics.split("\\$");
 
+                totalOption = Math.min(totalOption,oTexts1.length);
+                totalOption = Math.min(totalOption,oPics1.length);
+
                 if (totalOption>0){
 
                     for (int i = 0;i<totalOption;i++) {
                         JSONObject option = new JSONObject();
                         try {
+                            if (oTexts1[i].equals("null")){
+                                oTexts1[i] = "";
+                            }
+
                             option.put("text", oTexts1[i]);
 
                             String path = "";
@@ -272,7 +279,6 @@ public class VolleyUtil {
                 }
 
                 break;
-
 
             case 4:
 

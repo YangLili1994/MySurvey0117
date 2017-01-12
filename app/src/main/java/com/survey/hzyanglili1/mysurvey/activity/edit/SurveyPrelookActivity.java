@@ -7,8 +7,10 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.IntegerRes;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v4.view.accessibility.AccessibilityManagerCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
@@ -16,6 +18,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -41,6 +44,7 @@ import com.survey.hzyanglili1.mysurvey.Application.MySurveyApplication;
 import com.survey.hzyanglili1.mysurvey.CustomView.MyRectView;
 import com.survey.hzyanglili1.mysurvey.R;
 import com.survey.hzyanglili1.mysurvey.activity.BaseActivity;
+import com.survey.hzyanglili1.mysurvey.activity.MainActivity;
 import com.survey.hzyanglili1.mysurvey.db.DBHelper;
 import com.survey.hzyanglili1.mysurvey.db.QuestionTableDao;
 import com.survey.hzyanglili1.mysurvey.db.ResultTableDao;
@@ -56,6 +60,7 @@ import com.survey.hzyanglili1.mysurvey.utils.FormImage;
 import com.survey.hzyanglili1.mysurvey.utils.LargePicUp;
 import com.survey.hzyanglili1.mysurvey.utils.ParseResponse;
 import com.survey.hzyanglili1.mysurvey.utils.PostUploadRequest;
+import com.survey.hzyanglili1.mysurvey.utils.TimeUtil;
 import com.survey.hzyanglili1.mysurvey.utils.VolleyUtil;
 
 import org.json.JSONArray;
@@ -71,6 +76,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -78,6 +85,8 @@ import java.util.concurrent.CyclicBarrier;
 import static android.R.attr.breadCrumbShortTitle;
 import static android.R.attr.button;
 import static android.R.attr.focusable;
+import static android.R.attr.screenSize;
+import static android.R.attr.switchMinWidth;
 
 /**
  * Created by hzyanglili1 on 2016/11/8.
@@ -87,6 +96,7 @@ public class SurveyPrelookActivity extends BaseActivity{
 
     private static final String[] optionsNums = new String[]{"A.","B.","C.","D.","E.","F.","G.","H.","I."};
     private static final int PIC_UP_DONE = 1;
+    private static final int TIME_OUT= 2;
 
     private static CountDownLatch countDownLatch = new CountDownLatch(1);
     private static CyclicBarrier cyclicBarrier = new CyclicBarrier(2);
@@ -94,10 +104,23 @@ public class SurveyPrelookActivity extends BaseActivity{
     private LinearLayout layoutContainer = null;
     private TextView customTitle = null;
     private Button endBt = null;
+    private LinearLayout subjectInfoLayout = null;
+
+    //被试信息
+    private EditText nameET = null;
+    private EditText ageET = null;
+    private EditText otherInfoET = null;
+    private RadioGroup sexRG = null;
+
+    private String userNameS = "";
+    private int userAge;
+    private String otherS = "";
+    private int userSex;//1男  2女
 
     private int surveyId = 0;
     private int actionType = 0;
     private int resultId = 0;
+    private int increId = 0;
     private List<Question> questionList = new ArrayList<>();
 
     private int[] screenSize = null;
@@ -115,8 +138,15 @@ public class SurveyPrelookActivity extends BaseActivity{
 
     private JSONObject[] quesResults = null;
 
+
+    Map<Integer,String> resultsMap = new HashMap<>();
+
+
+
     //网络请求
     private RequestQueue requestQueue = null;
+
+    private Timer timer = null;
 
     private int allQuesCount = 0;
     private int allUpCount = 0;
@@ -138,15 +168,11 @@ public class SurveyPrelookActivity extends BaseActivity{
                     if (allQuesCount == allUpCount){
                         Log.d("haha","所有的图片上传完毕。");
 
+                        timer.cancel();
+
                         allUpCount = 0;
 
                         final JSONObject jsonObject = VolleyUtil.survey2Json(surveyId,surveyTableDao,questionTableDao);
-
-//                        if (jsonObject.toString().contains("\\/storage")){
-//
-//                            upLoadPics();
-//
-//                        }
 
                         Log.d("haha",jsonObject.toString());
 
@@ -171,8 +197,6 @@ public class SurveyPrelookActivity extends BaseActivity{
                             myUrl = Constants.URL_Update+"?id="+surveyId+"&";
                         }
 
-
-
                         String getUrl = null;
                         try {
                             getUrl = myUrl+"title="+ URLEncoder.encode(title,"UTF-8")+"&intro="+URLEncoder.encode(intro,"UTF-8")+"&questions="+URLEncoder.encode(question,"UTF-8");
@@ -186,12 +210,40 @@ public class SurveyPrelookActivity extends BaseActivity{
 
                                 Log.d("haha",TAG+"  上传文件response "+s);
 
-                                if (surveyId == 0){//新建问卷
-                                    Toast.makeText(SurveyPrelookActivity.this,"上传问卷成功",Toast.LENGTH_SHORT).show();
-                                }else {
+                                JSONObject response = null;
+                                Boolean result = false;
 
-                                    Log.d("haha","   id "+surveyId);
-                                    Toast.makeText(SurveyPrelookActivity.this,"保存问卷成功",Toast.LENGTH_SHORT).show();
+                                try {
+                                    response = new JSONObject(s);
+                                    if (response != null){
+                                        result = response.getBoolean("result");
+                                    }
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+
+
+                                if (result) {
+
+                                    if (surveyId == 0) {//新建问卷
+                                        Toast.makeText(SurveyPrelookActivity.this, "上传问卷成功", Toast.LENGTH_SHORT).show();
+                                        surveyTableDao.deleltSurvey(surveyId);
+
+                                    } else {
+
+                                        Log.d("haha", "   id " + surveyId);
+                                        Toast.makeText(SurveyPrelookActivity.this, "保存问卷成功", Toast.LENGTH_SHORT).show();
+                                        surveyTableDao.deleltSurvey(surveyId);
+
+                                    }
+
+                                    startActivity(new Intent(SurveyPrelookActivity.this, MySurveiesActivity.class));
+                                }else {
+                                    try {
+                                        Toast.makeText(SurveyPrelookActivity.this, "操作失败 "+response.getString("message"), Toast.LENGTH_LONG).show();
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
 
                             }
@@ -205,10 +257,10 @@ public class SurveyPrelookActivity extends BaseActivity{
                         });
 
                         requestQueue.add(requestGet);
-
-
                     }
-
+                    break;
+                case TIME_OUT:
+                    Toast.makeText(SurveyPrelookActivity.this,"操作失败，请重试！",Toast.LENGTH_SHORT).show();
                     break;
                 default:
                     break;
@@ -230,20 +282,392 @@ public class SurveyPrelookActivity extends BaseActivity{
         surveyId = getIntent().getExtras().getInt("survey_id");
         actionType = getIntent().getExtras().getInt("action_type");
 
+        screenSize = getScreenWidthAndHeight();
+
         initViewAndEvent();
-        getQuesInfoFromLocal();
+
+        if (Constants.isNetConnected && actionType!=Constants.PRELOOK){
+            getQuesInfoFromServer();
+        }else {
+            getQuesInfoFromLocal();
+        }
+    }
+
+
+    private void initViewAndEvent(){
+        layoutContainer = (LinearLayout)findViewById(R.id.activity_surveyprelook_container);
+        customTitle = (TextView)findViewById(R.id.custom_title_text) ;
+        endBt = (Button) findViewById(R.id.activity_surveyprelook_end_bt);
+
+
+        //被试信息
+        subjectInfoLayout = (LinearLayout) findViewById(R.id.activity_surveyprelook_subjectinfo);
+        nameET = (EditText) findViewById(R.id.username);
+        ageET = (EditText) findViewById(R.id.userage);
+        otherInfoET = (EditText) findViewById(R.id.other);
+        sexRG = (RadioGroup) findViewById(R.id.usersex);
+
+        sexRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup radioGroup, int i) {
+
+                switch (i){
+                    case R.id.man:
+                         userSex = 1;
+                        break;
+                    case R.id.women:
+                        userSex = 2;
+                        break;
+                    default:
+                        break;
+                }
+
+            }
+        });
+
+
+        if (actionType == Constants.DOSURVEY){
+            endBt.setText("完成问卷");
+            customTitle.setText("填写问卷");
+
+            subjectInfoLayout.setVisibility(View.VISIBLE);
+
+        }else if (actionType == Constants.PRELOOK){
+
+            if (surveyId == 0){//新建问卷
+                endBt.setText("上传问卷");
+            }else {
+                endBt.setText("保存修改");
+            }
+
+            customTitle.setText("问卷预览");
+        }else if (actionType == Constants.RESULT){
+            //查看问卷结果
+            customTitle.setText("问卷结果");
+
+            subjectInfoLayout.setVisibility(View.VISIBLE);
+            endBt.setVisibility(View.GONE);
+
+            resultId = getIntent().getExtras().getInt("result_id");
+            increId = getIntent().getExtras().getInt("id");
+
+        }
+
+        endBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+               endBtClicked();
+            }
+        });
+
+    }
+
+    Boolean endBtClicked(){
+
+        if (actionType == Constants.DOSURVEY){//填写调查问卷
+
+            surveyResults = new JSONArray();
+
+
+
+            for (int i = 0;i<isFilled.length;i++){
+                if (!isFilled[i]){
+                    Toast.makeText(this,"您还有题目未完成，请完善后再提交！",Toast.LENGTH_SHORT).show();
+                    return false;
+                }
+            }
+
+            for (int i = 0;i<quesResults.length;i++){
+
+                surveyResults.put(quesResults[i]);
+            }
+
+            //统计调查结果
+            Log.d("haha","问卷的统计结果 ："+surveyResults.toString());
+
+            if (Constants.isNetConnected){
+                upResult(surveyResults);
+            }else {
+                saveResult(surveyResults);
+                finish();
+            }
+
+        }else if(actionType == Constants.PRELOOK){//发布调查问卷
+            Log.d("haha","发布图片");
+
+            if (Constants.isNetConnected) {
+
+                TimerTask task = new TimerTask() {
+                    @Override
+                    public void run() {
+                        handler.sendEmptyMessage(TIME_OUT);
+                    }
+                };
+
+                timer = new Timer();
+                // 参数：
+                // 1000，延时1秒后执行。
+                // 2000，每隔2秒执行1次task。
+                timer.schedule(task, 5000);
+                upLoadPics();
+            }else {
+                Toast.makeText(this,"请检查网络连接",Toast.LENGTH_SHORT).show();
+            }
+
+        }
+
+        return true;
+    }
+
+
+    private void getQuesInfoFromLocal(){
+        Cursor cursor = questionTableDao.selectQuestionBySurveyId(surveyId);
+        while (cursor.moveToNext()){
+            Question question = ParseResponse.parseCursor2Ques(cursor);
+
+            Log.d("haha","  question "+question);
+
+            if (question != null){
+                questionList.add(question);
+            }
+        }
 
         allQuesCount = questionList.size();
         quesResults = new JSONObject[allQuesCount];
-
-
-
-
         isFilled = new Boolean[questionList.size()];
 
-        screenSize = getScreenWidthAndHeight();
+        if (actionType == Constants.RESULT){
+            getResultContent(resultId);
+        }else {
+            showAllQues();
+        }
+
+    }
+
+    private void getResultContent(int resultId){
+
+        if (Constants.isNetConnected && resultId != 0){
+            getResultInfoFromServer();
+        }else {
+            getResultInfoFromLocal();
+        }
+
+    }
+
+    private void getResultInfoFromLocal(){
+
+        Cursor cursor = null;
+
+        if (resultId == 0){
+
+            cursor = resultTableDao.selectResultByIncreId(increId);
+
+        }else {
+            cursor = resultTableDao.selectResultByResultId(resultId);
+        }
+
+        if (cursor == null){
+            //Toast.makeText(this,"数据缺失",Toast.LENGTH_SHORT).show();
+            Log.d("haha","getResultInfoFromLocal -- null");
+        }else {
+
+            resultsMap.clear();
+
+            if (cursor.moveToFirst()){
+                String results = cursor.getString(cursor.getColumnIndex("results"));
+                String otherInfo = cursor.getString(cursor.getColumnIndex("other"));
+                String name = cursor.getString(cursor.getColumnIndex("name"));
+                String sexS = cursor.getString(cursor.getColumnIndex("sexS"));
+                int sex = cursor.getInt(cursor.getColumnIndex("sex"));
+                int age = cursor.getInt(cursor.getColumnIndex("age"));
+
+                //显示被试人信息
+                nameET.setText(name.trim());
+                ageET.setText(age+"");
+                otherInfoET.setText(otherInfo.trim());
+                if (sex == 1) {
+                    sexRG.check(R.id.man);
+                }else if (sex == 2){
+                    sexRG.check(R.id.women);
+                }
 
 
+                //获得题目结果信息
+                try {
+                    JSONArray jsonArray = new JSONArray(results);
+                    if (jsonArray != null){
+                        for (int i = 0;i<jsonArray.length();i++){
+                            JSONObject object = jsonArray.getJSONObject(i);
+                            int quesId = object.getInt("question");
+                            String result = object.getString("result");
+
+                            resultsMap.put(quesId,result);
+                        }
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+
+        showAllQues();
+
+    }
+
+
+    private void getResultInfoFromServer(){
+
+        StringRequest stringRequest = new StringRequest(Constants.URL_USE_ResultDetail + resultId, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String s) {
+
+                Log.d("haha","getResultInfoFromServer - response "+s);
+
+                try {
+                    JSONObject object = new JSONObject(s);
+                    Boolean result = object.getBoolean("result");
+                    if (result){
+
+                        JSONObject subject = object.getJSONObject("subject");
+                        String other = subject.getString("other");//other信息，此信息在result列表中并未添加到数据库中，需要现在添加
+
+                        resultTableDao.updateOtherInfo(resultId,other);
+
+
+
+                        JSONArray array = object.getJSONArray("Rows");
+                        int total = object.getInt("Total");
+
+                        JSONArray resultArray = new JSONArray();
+
+                        for (int i = 0;i<total;i++){
+                            JSONObject object1 = array.getJSONObject(i);
+                            int quesId = object1.getInt("question");
+                            int type = object1.getInt("type");
+                            switch (type){
+                                case 1:
+                                    int choice = object1.getInt("choice");
+
+                                    JSONObject object2 = new JSONObject();
+                                    object2.put("question",quesId);
+                                    object2.put("result",choice+"");
+
+                                    resultArray.put(object2);
+
+                                    break;
+
+
+                                case 2:
+                                    JSONArray choiceArray = object1.getJSONArray("choices");
+                                    if (choiceArray != null) {
+
+                                        String choice2 = choiceArray.toString();
+                                        if (choice2.length()>2){
+                                            String result2 = choice2.substring(1,choice2.length()-1);//去掉array两边的中括号
+
+                                            JSONObject object3 = new JSONObject();
+                                            object3.put("question",quesId);
+                                            object3.put("result",result2);
+
+                                            resultArray.put(object3);
+                                        }
+
+                                    }
+                                    break;
+                                case 3:
+                                    String text = object1.getString("text");
+
+                                    JSONObject object4 = new JSONObject();
+                                    object4.put("question",quesId);
+                                    object4.put("result",text);
+
+                                    resultArray.put(object4);
+                                    break;
+                                case 4:
+                                    int level = object1.getInt("level");
+
+                                    JSONObject object5 = new JSONObject();
+                                    object5.put("question",quesId);
+                                    object5.put("result",level+"");
+
+                                    resultArray.put(object5);
+
+                                    break;
+                            }
+
+                        }
+
+                        //把结果存储到本地
+
+                        resultTableDao.updateResults(resultId,resultArray.toString());
+                        getResultInfoFromLocal();
+                    }else {
+                        Log.d("haha","getResultInfoFromServer...   error.");
+                        getResultInfoFromLocal();
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError volleyError) {
+
+                Log.d("haha","volley error "+volleyError.getMessage());
+
+            }
+        });
+
+        requestQueue.add(stringRequest);
+
+    }
+
+    /**
+     * 有网状态下  从服务器获取题目信息
+     */
+    private void getQuesInfoFromServer(){
+        StringRequest stringRequest = new StringRequest(Constants.URL_Prelook+surveyId,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.d("haha",TAG+"  getQuesListFromServer"+response);
+
+                        //先删除该问卷所有的问题数据
+                        questionTableDao.deleltSurveyAllQues(surveyId);
+
+                        JSONObject jsonObject = null;
+                        try {
+                            jsonObject = new JSONObject(response);
+                            String title = jsonObject.getString("title");
+                            String intro = jsonObject.getString("intro");
+
+                            surveyTableDao.updateSurvey(title,intro,surveyId);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        ParseResponse.parseAllQuesDetail(questionTableDao,jsonObject);
+
+                        getQuesInfoFromLocal();
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, error.getMessage(), error);
+            }
+        });
+
+        requestQueue.add(stringRequest);
+    }
+
+
+    /**
+     * 加载显示所有的题目信息
+     */
+    private void showAllQues(){
         for (int i = 0;i<questionList.size();i++){
             //初始化isFilled为false
             isFilled[i] = false;
@@ -284,94 +708,6 @@ public class SurveyPrelookActivity extends BaseActivity{
         }
     }
 
-    private void initViewAndEvent(){
-        layoutContainer = (LinearLayout)findViewById(R.id.activity_surveyprelook_container);
-        customTitle = (TextView)findViewById(R.id.custom_title_text) ;
-        endBt = (Button) findViewById(R.id.activity_surveyprelook_end_bt);
-
-
-        if (actionType == Constants.DOSURVEY){
-            endBt.setText("完成问卷");
-            customTitle.setText("填写问卷");
-        }else if (actionType == Constants.PRELOOK){
-
-            if (surveyId == 0){//新建问卷
-                endBt.setText("上传问卷");
-            }else {
-                endBt.setText("保存问卷");
-            }
-
-            customTitle.setText("问卷预览");
-        }else if (actionType == Constants.RESULT){
-            //查看问卷结果
-            customTitle.setText("问卷结果");
-            resultId = getIntent().getExtras().getInt("result_id");
-
-            Cursor cursor = resultTableDao.selectResultsByResultId(resultId);
-            cursor.moveToNext();
-            String result = cursor.getString(cursor.getColumnIndex("result_content"));
-            Log.d("haha","result : "+result);
-            resultContent = result.split("\\$");
-
-            endBt.setText("确定");
-        }
-
-        endBt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-               endBtClicked();
-            }
-        });
-
-    }
-
-    Boolean endBtClicked(){
-
-        if (actionType == Constants.DOSURVEY){//填写调查问卷
-
-            surveyResults = new JSONArray();
-
-
-
-            for (int i = 0;i<isFilled.length;i++){
-                if (!isFilled[i]){
-                    Toast.makeText(this,"您还有题目未完成，请完善后再提交！",Toast.LENGTH_SHORT).show();
-                    return false;
-                }
-            }
-
-            for (int i = 0;i<quesResults.length;i++){
-
-                surveyResults.put(quesResults[i]);
-            }
-
-            //统计调查结果
-            Log.d("haha","问卷的统计结果 ："+surveyResults.toString());
-
-            upResult(surveyResults);
-
-
-
-
-
-        }else if(actionType == Constants.PRELOOK){//发布调查问卷
-            Log.d("haha","发布图片");
-            upLoadPics();
-
-        }
-
-        return true;
-    }
-
-    private void getQuesInfoFromLocal(){
-        Cursor cursor = questionTableDao.selectQuestionBySurveyId(surveyId);
-        while (cursor.moveToNext()){
-            Question question = ParseResponse.parseCursor2Ques(cursor);
-            if (question != null){
-                questionList.add(question);
-            }
-        }
-    }
 
 
     private void showDanXuanQ(final DanXuanQuestion question){
@@ -421,12 +757,25 @@ public class SurveyPrelookActivity extends BaseActivity{
             //问题图片
             LinearLayout titleImageContainer = (LinearLayout)view.findViewById(R.id.danxuan_titleimage_container) ;
             final String[] titleImages = titlePics.split("\\$");
-            for (int i = 0;i<totalPic;i++){
+
+            for (int i = 0;i<titleImages.length;i++){
 
                 ImageView imageView = new ImageView(this);
+                imageView.setTag(titleImages[i]);
+                showImage(titleImages[i],imageView);
 
-                if (showImage(titleImages[i],imageView) != null){
-                    titleImageContainer.addView(showImage(titleImages[i],imageView));
+                imageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent intent = new Intent(SurveyPrelookActivity.this, ZoomImageActivity.class);
+                        intent.putExtra("imagePath",view.getTag().toString() );//((ImageView)view).getTag().toString()
+                        startActivity(intent);
+                    }
+                });
+
+
+                if ( imageView != null){
+                    titleImageContainer.addView(imageView);
                 }
             }
 
@@ -434,24 +783,35 @@ public class SurveyPrelookActivity extends BaseActivity{
             RadioGroup radioGroup = (RadioGroup)view.findViewById(R.id.xuanze_options) ;
 
             String[] optionStrings = optionTexts.split("\\$");
-            String[] optionImages = optionPics.split("\\$");
+            final String[] optionImages = optionPics.split("\\$");
 
             int checkId = 0;
             if (actionType == Constants.RESULT){
-                String result = resultContent[num].trim();
-                if (result != null && !result.isEmpty()) {
+                String result = resultsMap.get(id);
 
-                    checkId = Integer.parseInt(resultContent[num].trim());
-                    Log.d("haha","danxuan checkId = "+checkId);
+                if (result != null){
+
+                    if (!result.isEmpty()){
+                        try {
+                            checkId = Integer.parseInt(result.trim());
+                            Log.d("haha", "danxuan checkId = " + checkId);
+                        }catch (NumberFormatException e){
+                            e.printStackTrace();
+                        }
+                    }
+
                 }
             }
 
-            for (int i = 0;i<totalOption;i++){
+            for (int i = 0;i<Math.min(optionImages.length,optionStrings.length);i++){
 
                 final RadioButton radioButton = new RadioButton(this);
-                ImageView imageView = new ImageView(this);
 
-                radioButton.setText("  "+optionsNums[i]+optionStrings[i]);
+                String optionS = optionStrings[i];
+
+                if (optionS.equals("null")) optionS = "";
+
+                radioButton.setText("  "+optionsNums[i]+optionS);
                 radioButton.setTextColor(ContextCompat.getColor(this,R.color.alpha_65_black));
                 radioButton.setTextSize(TypedValue.COMPLEX_UNIT_SP,15);
                 radioButton.setTag(i);
@@ -490,11 +850,22 @@ public class SurveyPrelookActivity extends BaseActivity{
 
                 radioGroup.addView(radioButton);
 
-                if (i<optionImages.length) {
-                    ImageView optionImageView = showImage(optionImages[i], imageView);
+                if (!optionImages[i].equals("null")) {
+                    ImageView imageView = new ImageView(this);
+                    showImage(optionImages[i], imageView);
+                    imageView.setTag(optionImages[i]);
 
-                    if (optionImageView != null) {
-                        radioGroup.addView(optionImageView);
+                    imageView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Intent intent = new Intent(SurveyPrelookActivity.this, ZoomImageActivity.class);
+                            intent.putExtra("imagePath",view.getTag().toString() );//((ImageView)view).getTag().toString()
+                            startActivity(intent);
+                        }
+                    });
+
+                    if (imageView != null) {
+                        radioGroup.addView(imageView);
                     }
                 }
             }
@@ -552,12 +923,26 @@ public class SurveyPrelookActivity extends BaseActivity{
             LinearLayout titleImageContainer = (LinearLayout)view.findViewById(R.id.duoxuan_titleimage_container) ;
             final String[] titleImages = titlePics.split("\\$");
 
-            for (int i = 0;i<totalPic;i++){
+            for (int i = 0;i<titleImages.length;i++){
 
                 ImageView imageView = new ImageView(this);
 
-                if (showImage(titleImages[i],imageView) != null){
-                    titleImageContainer.addView(showImage(titleImages[i],imageView));
+                imageView.setTag(titleImages[i]);
+
+                imageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent intent = new Intent(SurveyPrelookActivity.this, ZoomImageActivity.class);
+                        intent.putExtra("imagePath",view.getTag().toString() );//((ImageView)view).getTag().toString()
+                        startActivity(intent);
+                    }
+                });
+
+                showImage(titleImages[i],imageView);
+
+
+                if (imageView != null){
+                    titleImageContainer.addView(imageView);
                 }
             }
 
@@ -577,18 +962,28 @@ public class SurveyPrelookActivity extends BaseActivity{
 
                 if (actionType == Constants.RESULT) {
                     //显示结果  对应选项选中
-                    duoxuanResult = resultContent[num].trim().split(" ");
 
-                    Log.d("haha", "duoxuanResult = " + resultContent[num].trim());
+
+                    String result = resultsMap.get(id);
+
+                    if (result != null){
+
+                        if (!result.isEmpty()){
+                            duoxuanResult = result.trim().split(",");
+                            Log.d("haha", "duoxuanResult = " + result);
+                        }
+
+                    }
 
                 }
 
-
-
                 for (int i = 0; i < options.length; i++) {
 
+                    String optionS = options[i];
+                    if (optionS.equals("null")) optionS = "";
+
                     final CheckBox option = new CheckBox(this);
-                    option.setText("  " + optionsNums[i] + options[i]);
+                    option.setText("  " + optionsNums[i] + optionS);
                     option.setTag(i+1);
 
                     option.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -633,21 +1028,41 @@ public class SurveyPrelookActivity extends BaseActivity{
                     });
 
                     if (duoxuanResult != null) {
-                        if (duoxuanResult[i].equals("1")) {
-                            option.setChecked(true);
+                        for (int j = 0;j<duoxuanResult.length;j++){
+
+                            if (duoxuanResult[j].equals(""+(i+1))){
+                                option.setChecked(true);
+                                break;
+                            }
+
                         }
+
                     }
 
                     optionslayout.addView(option);
 
-                    ImageView imageView = new ImageView(this);
 
-                    if (i<images.length) {
+
+                    if (i<images.length && !images[i].equals("null")) {
+                        ImageView imageView = new ImageView(this);
+                        showImage(images[i],imageView);
+
                         //选项图片
-                        ImageView optionImageView = showImage(images[i], imageView);
 
-                        if (optionImageView != null) {
-                            optionslayout.addView(optionImageView);
+                        imageView.setTag(images[i]);
+
+                        imageView.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                Intent intent = new Intent(SurveyPrelookActivity.this, ZoomImageActivity.class);
+                                intent.putExtra("imagePath",view.getTag().toString() );//((ImageView)view).getTag().toString()
+                                startActivity(intent);
+                            }
+                        });
+
+
+                        if (imageView != null) {
+                            optionslayout.addView(imageView);
                         }
                     }
 
@@ -669,12 +1084,7 @@ public class SurveyPrelookActivity extends BaseActivity{
             final int num = quesNum++;
 
             String text = question.getText();
-            int type = question.getType();
-            String typeS = question.getTypeS();
             final int required = question.getRequired();
-            int hasPic = question.getHasPic();
-            int totalPic = question.getTotalPic();
-            int totalOption = question.getTotalOption();
             String titlePics = question.getTitlePics();
             final int id = question.getId();
 
@@ -755,17 +1165,36 @@ public class SurveyPrelookActivity extends BaseActivity{
 
                 ImageView imageView = new ImageView(this);
 
-                if (showImage(titleImages[i],imageView) != null){
-                    titleImageContainer.addView(showImage(titleImages[i],imageView));
-                }
+                imageView.setTag(titleImages[i]);
 
+                imageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent intent = new Intent(SurveyPrelookActivity.this, ZoomImageActivity.class);
+                        intent.putExtra("imagePath",view.getTag().toString() );//((ImageView)view).getTag().toString()
+                        startActivity(intent);
+                    }
+                });
+
+                showImage(titleImages[i],imageView);
+
+                if ( imageView != null){
+                    titleImageContainer.addView(imageView);
+                }
             }
 
 
             if (actionType == Constants.RESULT) {
-                String result = resultContent[num].trim();
-                if (!result.isEmpty() && result != null) {
-                    editText.setText(result);
+
+                String result = resultsMap.get(id);
+
+                if (result != null){
+
+                    if (!result.isEmpty()){
+                        editText.setText(result);
+                        Log.d("haha", "tiankongResult = " + result);
+                    }
+
                 }
 
             }
@@ -807,7 +1236,7 @@ public class SurveyPrelookActivity extends BaseActivity{
                 quesResult.put("question",id);
                 quesResult.put("result","");
 
-                quesResults[num] = quesResult;
+                quesResults[num-1] = quesResult;
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -827,7 +1256,7 @@ public class SurveyPrelookActivity extends BaseActivity{
 
             }
 
-            Log.d("haha", "chengdu options = " + optionTexts);
+            //Log.d("haha", "chengdu options = " + optionTexts);
 
 
             //问题图片
@@ -839,8 +1268,21 @@ public class SurveyPrelookActivity extends BaseActivity{
 
                 ImageView imageView = new ImageView(this);
 
-                if (showImage(titleImages[i], imageView) != null) {
-                    titleImageContainer.addView(showImage(titleImages[i], imageView));
+                imageView.setTag(titleImages[i]);
+
+                imageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent intent = new Intent(SurveyPrelookActivity.this, ZoomImageActivity.class);
+                        intent.putExtra("imagePath",view.getTag().toString() );//((ImageView)view).getTag().toString()
+                        startActivity(intent);
+                    }
+                });
+
+                showImage(titleImages[i], imageView);
+
+                if ( imageView != null) {
+                    titleImageContainer.addView(imageView);
                 }
             }
 
@@ -855,17 +1297,35 @@ public class SurveyPrelookActivity extends BaseActivity{
 
             int chengduRes = 0;
             if (actionType == Constants.RESULT) {
-                String result = resultContent[num - 1].trim();
-                if (result != null && !result.isEmpty()) {
-                    chengduRes = Integer.parseInt(result);
+
+                String result = resultsMap.get(id);
+
+                if (result != null){
+
+                    if (!result.isEmpty()){
+                        try {
+                            chengduRes = Integer.parseInt(result.trim());
+                            //Log.d("haha", "chengduResult = " + chengduRes);
+                        }catch (NumberFormatException e){
+                            e.printStackTrace();
+                        }
+                    }
+
                 }
             }
 
             final LinearLayout chengduLevel = (LinearLayout) view.findViewById(R.id.chengdu_chengdu);
+
+            Log.d("haha","screenSize[0]/11  "+(screenSize[0]/12));
+
             for (int i = minVal; i <= maxVal; i++) {
 
-                MyRectView myRectView = new MyRectView(this, i);
+                MyRectView myRectView = new MyRectView(this, i,screenSize[0]/11);
                 chengduLevel.addView(myRectView);
+
+                if (actionType == Constants.RESULT) {
+                    if (i == chengduRes) myRectView.setViewSelected(true);
+                }
 
                 myRectView.setOnClickListener(new View.OnClickListener() {
                     //程度button点击
@@ -903,7 +1363,7 @@ public class SurveyPrelookActivity extends BaseActivity{
 
     private ImageView showImage(final String imagePath, ImageView imageView){
         if (imagePath.equals("null" )|| imagePath.isEmpty()) return null;
-        Log.d("haha","showimage----imagepath----"+imagePath);
+        //Log.d("haha","showimage----imagepath----"+imagePath);
         Bitmap bitmap = MySurveyApplication.decodeSampledBitmapFromFile(imagePath, screenSize[0] / 2, screenSize[1] / 2);
 
         if (bitmap==null){
@@ -930,14 +1390,16 @@ public class SurveyPrelookActivity extends BaseActivity{
 
 
 
-        imageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(SurveyPrelookActivity.this, ZoomImageActivity.class);
-                intent.putExtra("imagePath", imagePath);
-                startActivity(intent);
-            }
-        });
+//        imageView.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//
+//
+//                Intent intent = new Intent(SurveyPrelookActivity.this, ZoomImageActivity.class);
+//                intent.putExtra("imagePath", imagePath);
+//                startActivity(intent);
+//            }
+//        });
 
         return imageView;
 
@@ -956,166 +1418,47 @@ public class SurveyPrelookActivity extends BaseActivity{
 
         Cursor cursor = questionTableDao.selectQuestionBySurveyId(surveyId);
 
-        allQuesCount = cursor.getCount();
+        if (cursor.getCount() == 0){
+            Toast.makeText(this,"题目不能为空！",Toast.LENGTH_SHORT).show();
+        }else {
 
-        while (cursor.moveToNext()) {
+            allQuesCount = cursor.getCount();
 
+            while (cursor.moveToNext()) {
 
-            int type = cursor.getInt(cursor.getColumnIndex("type"));
-            final int id = cursor.getInt(cursor.getColumnIndex("id"));
-            int hasPic = cursor.getInt(cursor.getColumnIndex("hasPic"));
-            String pics = cursor.getString(cursor.getColumnIndex("pics"));
-            final int totalPic = cursor.getInt(cursor.getColumnIndex("totalPic"));
+                int type = cursor.getInt(cursor.getColumnIndex("type"));
+                final int id = cursor.getInt(cursor.getColumnIndex("id"));
+                int hasPic = cursor.getInt(cursor.getColumnIndex("hasPic"));
+                String pics = cursor.getString(cursor.getColumnIndex("pics"));
+                final int totalPic = cursor.getInt(cursor.getColumnIndex("totalPic"));
 
-            final String optionPics = cursor.getString(cursor.getColumnIndex("optionPics"));
-            final int totalOption = cursor.getInt(cursor.getColumnIndex("totalOption"));
+                final String optionPics = cursor.getString(cursor.getColumnIndex("optionPics"));
+                final int totalOption = cursor.getInt(cursor.getColumnIndex("totalOption"));
 
-            Log.d("haha", "upLoadPics");
+                Log.d("haha", "upLoadPics");
 
-            final List<String>  allPics = new ArrayList<>();
+                final List<String> allPics = new ArrayList<>();
 
-            if (hasPic == 1) {
+                if (hasPic == 1) {
 
-                String[] titlePics = pics.split("\\$");
-                final List<String> titlePiscList = new ArrayList<>(Arrays.asList(titlePics));
+                    String[] titlePics = pics.split("\\$");
+                    final List<String> titlePiscList = new ArrayList<>(Arrays.asList(titlePics));
 
-                for (String s : titlePiscList){
-                    if (!s.contains("http") && !s.contains("null")){
-                        allPics.add(s);
-                    }
-                }
-
-                if (allPics.size() > 0 ) {//有title image
-
-                    final StringBuilder allTitlePics = new StringBuilder();
-
-                    LargePicUp largePicUp = new LargePicUp(Constants.URL_UploadPics, allPics, new Response.Listener() {
-                        @Override
-                        public void onResponse(Object o) { //获取title image url
-
-                            Log.d("haha","up all image "+o);
-
-                            JSONArray response = null;
-                            try {
-                                response = new JSONArray((String) o);
-
-                                int j = 0;
-
-                                for (int i = 0 ;i<titlePiscList.size();i++){
-                                    if (titlePiscList.get(i).contains("http") || titlePiscList.get(i).contains("null")){
-                                        allTitlePics.append(titlePiscList.get(i)).append("$");
-                                    }else {
-                                        if (j<=response.length()) {
-                                            allTitlePics.append(Constants.URL_BASE+response.getString(j++)).append("$");
-                                        }
-                                    }
-                                }
-
-                                Log.d("haha","allTitlePics "+allTitlePics.toString());
-
-                                questionTableDao.updateQTitlePic(id,allTitlePics.toString());
-
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-
-
-                            if (totalOption>0){//有option pic
-                                String[] optionPicsArray = optionPics.split("\\$");
-                                final List<String> optionPicList = new ArrayList<>(Arrays.asList(optionPicsArray));
-
-                                final List<String>  allOptionPics = new ArrayList<>();
-
-                                for (String s : optionPicList){//本地图片才需要上传
-                                    if (!s.contains("http") && !s.contains("null")){
-                                        allOptionPics.add(s);
-                                    }
-                                }
-
-                                if (allOptionPics.size() > 0){
-
-                                    final StringBuilder allOptionPicSB = new StringBuilder();
-
-                                    LargePicUp largePicUp1 = new LargePicUp(Constants.URL_UploadPics, allOptionPics, new Response.Listener() {
-                                        @Override
-                                        public void onResponse(Object o) {//获得option image url
-
-                                            JSONArray response = null;
-                                            try {
-                                                response = new JSONArray((String) o);
-
-                                                int j = 0;
-
-                                                for (int i = 0 ;i<optionPicList.size();i++){
-                                                    if (optionPicList.get(i).contains("http") || optionPicList.get(i).contains("null")){
-                                                        allOptionPicSB.append(optionPicList.get(i)).append("$");
-                                                    }else {
-                                                        if (j<=response.length()) {
-                                                            allOptionPicSB.append(Constants.URL_BASE+response.getString(j++)).append("$");/////
-                                                        }
-                                                    }
-                                                }
-
-                                                Log.d("haha","allOptionPicSB "+allOptionPicSB.toString());
-                                                questionTableDao.updateQOptionPic(id,allOptionPicSB.toString());
-
-                                                handler.sendEmptyMessage(PIC_UP_DONE);
-
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
-                                            }
-
-
-
-
-                                        }
-                                    }, new Response.ErrorListener() {
-                                        @Override
-                                        public void onErrorResponse(VolleyError volleyError) {
-
-                                        }
-                                    });
-
-                                    requestQueue.add(largePicUp1);
-                                }else {
-                                    handler.sendEmptyMessage(PIC_UP_DONE);
-                                }
-                            }else {
-                                handler.sendEmptyMessage(PIC_UP_DONE);
-                            }
-                        }
-                    }, new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError volleyError) {
-
-                        }
-                    });
-
-                    requestQueue.add(largePicUp);
-                }else {
-                    handler.sendEmptyMessage(PIC_UP_DONE);
-                }
-
-            }else {//只有option image
-                if (totalOption>0){//有option pic
-                    String[] optionPicsArray = optionPics.split("\\$");
-                    final List<String> optionPicList = new ArrayList<>(Arrays.asList(optionPicsArray));
-
-                    final List<String>  allOptionPics = new ArrayList<>();
-
-                    for (String s : optionPicList){//本地图片才需要上传
-                        if (!s.contains("http") && !s.contains("null")){
-                            allOptionPics.add(s);
+                    for (String s : titlePiscList) {
+                        if (!s.contains("http") && !s.contains("null")) {
+                            allPics.add(s);
                         }
                     }
 
-                    if (allOptionPics.size() > 0){
+                    if (allPics.size() > 0) {//有title image
 
-                        final StringBuilder allOptionPicSB = new StringBuilder();
+                        final StringBuilder allTitlePics = new StringBuilder();
 
-                        LargePicUp largePicUp1 = new LargePicUp(Constants.URL_UploadPics, allOptionPics, new Response.Listener() {
+                        LargePicUp largePicUp = new LargePicUp(Constants.URL_UploadPics, allPics, new Response.Listener() {
                             @Override
-                            public void onResponse(Object o) {//获得option image url
+                            public void onResponse(Object o) { //获取title image url
+
+                                Log.d("haha", "up all image " + o);
 
                                 JSONArray response = null;
                                 try {
@@ -1123,28 +1466,86 @@ public class SurveyPrelookActivity extends BaseActivity{
 
                                     int j = 0;
 
-                                    for (int i = 0 ;i<optionPicList.size();i++){
-                                        if (optionPicList.get(i).contains("http") || optionPicList.get(i).contains("null")){
-                                            allOptionPicSB.append(optionPicList.get(i)).append("$");
-                                        }else {
-                                            if (j<=response.length()) {
-                                                allOptionPicSB.append(Constants.URL_BASE+response.getString(j++)).append("$");
+                                    for (int i = 0; i < titlePiscList.size(); i++) {
+                                        if (titlePiscList.get(i).contains("http") || titlePiscList.get(i).contains("null")) {
+                                            allTitlePics.append(titlePiscList.get(i)).append("$");
+                                        } else {
+                                            if (j <= response.length()) {
+                                                allTitlePics.append(Constants.URL_BASE + response.getString(j++)).append("$");
                                             }
                                         }
                                     }
 
-                                    Log.d("haha","allOptionPicSB "+allOptionPicSB.toString());
-                                    questionTableDao.updateQOptionPic(id,allOptionPicSB.toString());
+                                    Log.d("haha", "allTitlePics " + allTitlePics.toString());
 
-                                    handler.sendEmptyMessage(PIC_UP_DONE);
+                                    questionTableDao.updateQTitlePic(id, allTitlePics.toString());
 
                                 } catch (JSONException e) {
                                     e.printStackTrace();
                                 }
 
 
+                                if (totalOption > 0) {//有option pic
+                                    String[] optionPicsArray = optionPics.split("\\$");
+                                    final List<String> optionPicList = new ArrayList<>(Arrays.asList(optionPicsArray));
+
+                                    final List<String> allOptionPics = new ArrayList<>();
+
+                                    for (String s : optionPicList) {//本地图片才需要上传
+                                        if (!s.contains("http") && !s.contains("null")) {
+                                            allOptionPics.add(s);
+                                        }
+                                    }
+
+                                    if (allOptionPics.size() > 0) {
+
+                                        final StringBuilder allOptionPicSB = new StringBuilder();
+
+                                        LargePicUp largePicUp1 = new LargePicUp(Constants.URL_UploadPics, allOptionPics, new Response.Listener() {
+                                            @Override
+                                            public void onResponse(Object o) {//获得option image url
+
+                                                JSONArray response = null;
+                                                try {
+                                                    response = new JSONArray((String) o);
+
+                                                    int j = 0;
+
+                                                    for (int i = 0; i < optionPicList.size(); i++) {
+                                                        if (optionPicList.get(i).contains("http") || optionPicList.get(i).contains("null")) {
+                                                            allOptionPicSB.append(optionPicList.get(i)).append("$");
+                                                        } else {
+                                                            if (j <= response.length()) {
+                                                                allOptionPicSB.append(Constants.URL_BASE + response.getString(j++)).append("$");/////
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Log.d("haha", "allOptionPicSB " + allOptionPicSB.toString());
+                                                    questionTableDao.updateQOptionPic(id, allOptionPicSB.toString());
+
+                                                    handler.sendEmptyMessage(PIC_UP_DONE);
+
+                                                } catch (JSONException e) {
+                                                    e.printStackTrace();
+                                                }
 
 
+                                            }
+                                        }, new Response.ErrorListener() {
+                                            @Override
+                                            public void onErrorResponse(VolleyError volleyError) {
+
+                                            }
+                                        });
+
+                                        requestQueue.add(largePicUp1);
+                                    } else {
+                                        handler.sendEmptyMessage(PIC_UP_DONE);
+                                    }
+                                } else {
+                                    handler.sendEmptyMessage(PIC_UP_DONE);
+                                }
                             }
                         }, new Response.ErrorListener() {
                             @Override
@@ -1153,31 +1554,171 @@ public class SurveyPrelookActivity extends BaseActivity{
                             }
                         });
 
-                        requestQueue.add(largePicUp1);
-                    }else {
+                        requestQueue.add(largePicUp);
+                    } else {
                         handler.sendEmptyMessage(PIC_UP_DONE);
                     }
-                }else {//没有图片
 
-                    handler.sendEmptyMessage(PIC_UP_DONE);
+                } else {//只有option image
+                    if (totalOption > 0) {//有option pic
+                        String[] optionPicsArray = optionPics.split("\\$");
+                        final List<String> optionPicList = new ArrayList<>(Arrays.asList(optionPicsArray));
 
+                        final List<String> allOptionPics = new ArrayList<>();
+
+                        for (String s : optionPicList) {//本地图片才需要上传
+                            if (!s.contains("http") && !s.contains("null")) {
+                                allOptionPics.add(s);
+                            }
+                        }
+
+                        if (allOptionPics.size() > 0) {
+
+                            final StringBuilder allOptionPicSB = new StringBuilder();
+
+                            LargePicUp largePicUp1 = new LargePicUp(Constants.URL_UploadPics, allOptionPics, new Response.Listener() {
+                                @Override
+                                public void onResponse(Object o) {//获得option image url
+
+                                    JSONArray response = null;
+                                    try {
+                                        response = new JSONArray((String) o);
+
+                                        int j = 0;
+
+                                        for (int i = 0; i < optionPicList.size(); i++) {
+                                            if (optionPicList.get(i).contains("http") || optionPicList.get(i).contains("null")) {
+                                                allOptionPicSB.append(optionPicList.get(i)).append("$");
+                                            } else {
+                                                if (j <= response.length()) {
+                                                    allOptionPicSB.append(Constants.URL_BASE + response.getString(j++)).append("$");
+                                                }
+                                            }
+                                        }
+
+                                        Log.d("haha", "allOptionPicSB " + allOptionPicSB.toString());
+                                        questionTableDao.updateQOptionPic(id, allOptionPicSB.toString());
+
+                                        handler.sendEmptyMessage(PIC_UP_DONE);
+
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+
+
+                                }
+                            }, new Response.ErrorListener() {
+                                @Override
+                                public void onErrorResponse(VolleyError volleyError) {
+
+                                }
+                            });
+
+                            requestQueue.add(largePicUp1);
+                        } else {
+                            handler.sendEmptyMessage(PIC_UP_DONE);
+                        }
+                    } else {//没有图片
+
+                        handler.sendEmptyMessage(PIC_UP_DONE);
+
+                    }
                 }
             }
         }
     }
 
-    public void upResult(JSONArray questions){
+    /**
+     * 保存问卷结果到本地（无网状态）
+     */
+    public void saveResult(JSONArray questions){
 
-        String name = "lily";
-        int sex = 2;
-        int age = 22;
+        userNameS = nameET.getText().toString().trim();
+        try {
+            userAge = Integer.parseInt(ageET.getText().toString().trim());
+        }catch (NumberFormatException e){
+            e.printStackTrace();
+        }
+        otherS = otherInfoET.getText().toString().trim();
+
+        String sexS = null;
+        if (userSex == 1){
+            sexS = "男";
+        }else {
+            sexS = "女";
+        }
+
+        Log.d("haha",TAG+"   curTime "+TimeUtil.getCurTime());
+
+
+        Result result = new Result(0,surveyId,userNameS,1,userSex,sexS,userAge,otherS,TimeUtil.getCurTime(),allQuesCount,questions.toString());
+        resultTableDao.addResult(result);
+
+        Toast.makeText(this,"保存至本地",Toast.LENGTH_SHORT).show();
+
+        Log.d("haha","保存的结果："+result.toString());
+    }
+
+
+    /**
+     * 问卷结果上传之后本地备份,用于上传后无网状态下可以看到本结果
+     * @param questions
+     */
+    public void saveResultAfterUp(JSONArray questions,int resultId){
+
+        userNameS = nameET.getText().toString().trim();
+        try {
+            userAge = Integer.parseInt(ageET.getText().toString().trim());
+        }catch (NumberFormatException e){
+            e.printStackTrace();
+        }
+        otherS = otherInfoET.getText().toString().trim();
+
+        String sexS = null;
+        if (userSex == 1){
+            sexS = "男";
+        }else {
+            sexS = "女";
+        }
+
+
+        Result result = new Result(resultId,surveyId,userNameS,2,userSex,sexS,userAge,otherS,TimeUtil.getCurTime(),allQuesCount,questions.toString());
+        resultTableDao.addResult(result);
+
+        //Toast.makeText(this,"保存至本地saveResultAfterUp",Toast.LENGTH_SHORT).show();
+
+        Log.d("haha","保存的结果saveResultAfterUp："+result.toString());
+
+
+    }
+
+    /**
+     * 直接上传问卷结果到服务器（有网状态）
+     * @param questions
+     */
+    public void upResult(final JSONArray questions){
+
+        userNameS = nameET.getText().toString().trim();
+
+        try {
+            userAge = Integer.parseInt(ageET.getText().toString().trim());
+        }catch (NumberFormatException e){
+            e.printStackTrace();
+        }
+
+        otherS = otherInfoET.getText().toString().trim();
+
 
         String myUrl = null;
         try {
-            myUrl = Constants.URL_USE_AddResult+"?"+"questionnaire="+surveyId+"&name="+ URLEncoder.encode(name,"UTF-8")+"&sex="+sex+"&age="+age+"&results="+questions;
+            myUrl = Constants.URL_USE_AddResult+"?"+"questionnaire="+surveyId+"&name="+ URLEncoder.encode(userNameS,"UTF-8")+"&sex="+userSex+
+                    "&age="+userAge+"&other="+URLEncoder.encode(otherS,"UTF-8")+"&date="+ URLEncoder.encode(TimeUtil.getCurTime(),"UTF-8")+"&results="+URLEncoder.encode(questions.toString(),"UTF-8");
+
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
+
+        Log.d("haha",TAG+"  upResult "+"name "+userNameS+"  age"+userAge+" sex "+userSex);
 
         StringRequest stringRequest = new StringRequest(myUrl, new Response.Listener<String>() {
             @Override
@@ -1189,12 +1730,20 @@ public class SurveyPrelookActivity extends BaseActivity{
 
                     if (response.getBoolean("result")){
 
-                        Log.d("haha",TAG+"  surveyId"+surveyId+"  "+response.getString("message"));
+                        Log.d("haha",TAG+"  surveyId = "+surveyId+"  resultId = "+response.getString("message"));
 
                         Toast.makeText(SurveyPrelookActivity.this,"填写问卷成功",Toast.LENGTH_SHORT).show();
+
+                        saveResultAfterUp(questions,Integer.parseInt(response.getString("message").trim()));
+
+                        finish();
                     }else {
                         Log.d("haha",TAG+"  "+response.getString("message"));
-                        Toast.makeText(SurveyPrelookActivity.this,"填写问卷失败 "+response.getString("message")+"，请重试",Toast.LENGTH_LONG).show();
+                        Toast.makeText(SurveyPrelookActivity.this,"填写问卷失败，请重试",Toast.LENGTH_LONG).show();
+
+                        saveResult(questions);
+
+                        finish();
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -1210,8 +1759,9 @@ public class SurveyPrelookActivity extends BaseActivity{
             }
         });
 
+
         requestQueue.add(stringRequest);
-    }
-
 
     }
+
+}

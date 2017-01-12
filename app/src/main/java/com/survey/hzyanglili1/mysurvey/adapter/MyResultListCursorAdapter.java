@@ -21,7 +21,7 @@ import java.util.GregorianCalendar;
 public class MyResultListCursorAdapter extends CursorAdapter {
 
     public interface CallBack{
-        abstract void itemClickHandler(int resultId);
+        abstract void itemClickHandler(int resultId,int id);
     }
 
     private Context context;
@@ -39,7 +39,10 @@ public class MyResultListCursorAdapter extends CursorAdapter {
     class ViewHolder{
         TextView resultId;
         TextView resultTime;
-        TextView resultDesc;
+        TextView name;
+        TextView sex;
+        TextView age;
+        TextView id;
     }
 
     @Override
@@ -51,7 +54,10 @@ public class MyResultListCursorAdapter extends CursorAdapter {
 
         viewHolder.resultId = (TextView)view.findViewById(R.id.item_resultlist_resultid);
         viewHolder.resultTime = (TextView)view.findViewById(R.id.item_resultlist_resulttime);
-        viewHolder.resultDesc = (TextView)view.findViewById(R.id.item_resultlist_resultDesc);
+        viewHolder.name = (TextView)view.findViewById(R.id.item_resultlist_name);
+        viewHolder.sex = (TextView)view.findViewById(R.id.item_resultlist_sex);
+        viewHolder.age = (TextView)view.findViewById(R.id.item_resultlist_age);
+        viewHolder.id = (TextView)view.findViewById(R.id.item_resultlist_id);
 
         view.setTag(viewHolder);
         return view;
@@ -63,24 +69,34 @@ public class MyResultListCursorAdapter extends CursorAdapter {
             @Override
             public void onClick(View view) {
                 String resultId = ((TextView)view.findViewById(R.id.item_resultlist_resultid)).getText().toString().trim();
+                String id = ((TextView)view.findViewById(R.id.item_resultlist_id)).getText().toString().trim();
                 Log.d("haha","resultid = "+resultId);
 
-                callBack.itemClickHandler(Integer.parseInt(resultId));
-
+                try {
+                    callBack.itemClickHandler(Integer.parseInt(resultId), Integer.parseInt(id));
+                }catch (NumberFormatException e){
+                    e.printStackTrace();
+                }
             }
         });
 
         ViewHolder viewHolder= (ViewHolder) view.getTag();
 
-        int id = cursor.getInt(cursor.getColumnIndex("result_id"));
-        long time = cursor.getLong(cursor.getColumnIndex("result_time"));
-        String desc = "填写人信息";
+        int resultId = cursor.getInt(cursor.getColumnIndex("result_id"));
+        String time = cursor.getString(cursor.getColumnIndex("date"));
+        String name = cursor.getString(cursor.getColumnIndex("name"));
+        String sexS = cursor.getString(cursor.getColumnIndex("sexS"));
+        int age = cursor.getInt(cursor.getColumnIndex("age"));
+        int id = cursor.getInt(0);
 
-        gc.setTimeInMillis(time);
-        String dateStr = dateformat.format(gc.getTime());
+//        gc.setTimeInMillis(time);
+//        String dateStr = dateformat.format(gc.getTime());
 
-        viewHolder.resultId.setText(""+id);
-        viewHolder.resultTime.setText(dateStr);
-        viewHolder.resultDesc.setText(desc);
+        viewHolder.resultId.setText(""+resultId);
+        viewHolder.resultTime.setText(time);
+        viewHolder.name.setText(name);
+        viewHolder.sex.setText(sexS);
+        viewHolder.age.setText(""+age);
+        viewHolder.id.setText(""+id);
     }
 }

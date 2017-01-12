@@ -60,7 +60,7 @@ public class TiankongQuesActivity extends BaseActivity {
     private int surveyId;
     private int id;
     private String text = "";
-    private int required = 1;//默认必选
+    private int required = 0;//默认必选
     private int hasPic = 0;//默认无title pic
     private int totalPic = 0;
     private int totalOption = 0;
@@ -163,6 +163,10 @@ public class TiankongQuesActivity extends BaseActivity {
                 toggleButton.setSelected(false);
             }
         }else {//新建题目
+            //默认为必选项
+            toggleButton.setSelected(true);
+            required = 1;
+
             customTitle.setText("新建填空题");
         }
 
@@ -296,6 +300,8 @@ public class TiankongQuesActivity extends BaseActivity {
 
     private Boolean addQuestion(){
 
+        Log.d("haha",TAG+"new  tiankong question");
+
         text = titleEt.getText().toString().trim();
         if (text == null || text.isEmpty() || text.equals("")){
             Toast.makeText(this,"题目标题不能为空！",Toast.LENGTH_LONG).show();
@@ -322,6 +328,8 @@ public class TiankongQuesActivity extends BaseActivity {
 
             TiankongQuestion question = null;
 
+            Log.d("haha",TAG+"new  tiankong question");
+
             if (isNew) {//新加题目
 
                 id = questionTableDao.getMaxQuesId()+1;
@@ -331,11 +339,13 @@ public class TiankongQuesActivity extends BaseActivity {
                     id = 0;
                 }
 
-                Log.d("haha",TAG+"new question id :"+id);
+                Log.d("haha",TAG+"new tiankong question id :"+id);
 
 
                 question = new TiankongQuestion(surveyId,id,text,3,Constants.TIANKONGTI,required,hasPic,totalPic,titleImagePath.toString());
                 questionTableDao.addQuestion(question);
+
+                Log.d("haha",TAG+"new  tiankong question success");
 
             }else {//修改题目
                 question = new TiankongQuestion(surveyId,id,text,3,Constants.TIANKONGTI,required,hasPic,totalPic,titleImagePath.toString());

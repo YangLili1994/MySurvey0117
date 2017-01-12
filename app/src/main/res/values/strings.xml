@@ -6,7 +6,7 @@
     <string name="surveynamehint">请输入问卷名称</string>
     <string name="surveydescription">问卷说明</string>
     <string name="surveydescriptionhint">请输入问卷说明</string>
-    <string name="startnew">开始创建问卷</string>
+    <string name="startnew">新建问卷</string>
     <string name="addNewQuestion">+添加新题</string>
 
     <string name="questiontitle">题目标题</string>

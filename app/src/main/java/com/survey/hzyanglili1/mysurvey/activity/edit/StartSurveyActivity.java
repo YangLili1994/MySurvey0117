@@ -21,10 +21,12 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.survey.hzyanglili1.mysurvey.Application.Constants;
+import com.survey.hzyanglili1.mysurvey.Application.MySurveyApplication;
 import com.survey.hzyanglili1.mysurvey.R;
 import com.survey.hzyanglili1.mysurvey.activity.BaseActivity;
 import com.survey.hzyanglili1.mysurvey.adapter.MyQuesListViewAdapter;
 import com.survey.hzyanglili1.mysurvey.adapter.MySurveyListCursorAdapter;
+import com.survey.hzyanglili1.mysurvey.db.BakesTableDao;
 import com.survey.hzyanglili1.mysurvey.db.BufferTimeTableDao;
 import com.survey.hzyanglili1.mysurvey.db.DBHelper;
 import com.survey.hzyanglili1.mysurvey.db.QuestionTableDao;
@@ -62,30 +64,29 @@ public class StartSurveyActivity extends BaseActivity {
     private Button addNewQuestion = null;
     //题目列表
     private ListView listView = null;
+    private TextView editInfoBt = null;
     //当前正在编辑的问卷id
-    private static int surveyId;
-    private static String surveyTitle = "";
+    private int surveyId;
+    private String surveyTitle = "";
+    private int status;
 
     private MyQuesListViewAdapter adapter = null;
 
     private MyQuesListViewAdapter.QuesListViewCallbackI quesListViewCallbackI = null;
 
     //当前展开位置
-    int strenchPosNow = -1;
-
-
-    int curFirstPostion = -1;
+    private int strenchPosNow = -1;
+    private int curFirstPostion = -1;
 
     private SurveyTableDao surveyTableDao = null;
     private QuestionTableDao questionTableDao = null;
     private BufferTimeTableDao bufferTimeTableDao = null;
+    private BakesTableDao bakesTableDao = null;
 
     //网络请求
     private RequestQueue requestQueue = null;
-    private Question[] questionLists;
-    private Cursor quesCursors;
     List<Map<String,String>> questionInfo = new ArrayList<>();
-    private int total;
+
 
 
     @Override
@@ -100,33 +101,50 @@ public class StartSurveyActivity extends BaseActivity {
         surveyTableDao = new SurveyTableDao(new DBHelper(this,1));
         questionTableDao = new QuestionTableDao(new DBHelper(this,1));
         bufferTimeTableDao = new BufferTimeTableDao(new DBHelper(this,1));
+        bakesTableDao = new BakesTableDao(new DBHelper(this,1));
 
         initViewAndEvent();
 
-        if (bufferValid()){//缓存有效
+        if (surveyId != 0){
 
-            Log.d("haha",TAG+"  缓存有效");
-
-            getQuesListFromLocal(surveyId);
-
-        }else {//缓存无效
-
-            Log.d("haha",TAG+"  缓存无效");
-
-            if (Constants.Enter){//从修改题目信息返回  不用从服务器获取数据(防止修改的数据被覆盖)
-                getQuesListFromLocal(surveyId);
-            }else {//只有从问卷列表页进入的时候才获取服务器数据
-
-                if(NetWorkUtils.isNetworkConnected(this)){
-                    getQuesListFromServer(surveyId);
-                }else {
-                    Toast.makeText(this,"请联网更新数据",Toast.LENGTH_SHORT).show();
-                    getQuesListFromLocal(surveyId);
-                }
-
-                Constants.Enter = true;//表示已进入
+            if (!Constants.Enter){
+                editWran();
             }
+
+
+            if (bufferValid()){//缓存有效
+
+                Log.d("haha",TAG+"  缓存有效");
+
+                getQuesListFromLocal(surveyId);
+
+                Constants.Enter = true;
+
+            }else {//缓存无效
+
+                Log.d("haha",TAG+"  缓存无效");
+
+                if (Constants.Enter){//从修改题目信息返回  不用从服务器获取数据(防止修改的数据被覆盖)
+                    getQuesListFromLocal(surveyId);
+                }else {//只有从问卷列表页进入的时候才获取服务器数据
+
+                    if(NetWorkUtils.isNetworkConnected(this)){
+                        getQuesListFromServer(surveyId);
+                    }else {
+                        Toast.makeText(this,"请联网更新数据",Toast.LENGTH_SHORT).show();
+                        getQuesListFromLocal(surveyId);
+                    }
+
+                    Constants.Enter = true;//表示已进入
+                }
+            }
+
+
+
+        }else {//新建问卷
+            getQuesListFromLocal(surveyId);
         }
+
     }
 
     private Boolean bufferValid(){
@@ -145,9 +163,18 @@ public class StartSurveyActivity extends BaseActivity {
         backLinearLayout = (LinearLayout)findViewById(R.id.custom_title_back);
         addNewQuestion = (Button)findViewById(R.id.activity_startsurvey_addnewquestion);
         listView = (ListView)findViewById(R.id.activity_startsurvey_listview) ;
+        editInfoBt = (TextView) findViewById(R.id.activity_startsurvey_editsurveyinfo);
 
 
         backLinearLayout.setVisibility(View.VISIBLE);
+        editInfoBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                editSurveyInfo();
+
+            }
+        });
 
         quesListViewCallbackI = new MyQuesListViewAdapter.QuesListViewCallbackI() {
             @Override
@@ -293,7 +320,7 @@ public class StartSurveyActivity extends BaseActivity {
             @Override
             public void onClick(View view) {
                 //startActivity(new Intent(StartSurveyActivity.this,MySurveiesActivity.class));
-                finish();
+                confirmSaved();
             }
         });
 
@@ -345,9 +372,11 @@ public class StartSurveyActivity extends BaseActivity {
         Cursor cursor1 = surveyTableDao.selectSurveyById(surveyId);
         while (cursor1.moveToNext()){
             surveyTitle = cursor1.getString(cursor1.getColumnIndex("title"));
+            //status = cursor1.getInt(cursor1.getColumnIndex("status"));
         }
 
         initViewDisp();
+
     }
 
     private void initViewDisp(){
@@ -355,6 +384,7 @@ public class StartSurveyActivity extends BaseActivity {
 
         adapter = new MyQuesListViewAdapter(this, questionInfo, quesListViewCallbackI);
         listView.setAdapter(adapter);
+        MySurveyApplication.setListViewHeightBasedOnChildren(listView);
 
     }
 
@@ -366,27 +396,23 @@ public class StartSurveyActivity extends BaseActivity {
                     public void onResponse(String response) {
                         Log.d("haha",TAG+"  getQuesListFromServer"+response);
 
-                        //备份问卷信息
-                        bufferTimeTableDao.setBake(response);
-
-                        //先删除该问卷所有的问题数据
-                        questionTableDao.deleltSurveyAllQues(surveyId);
-
                         JSONObject jsonObject = null;
                         try {
                             jsonObject = new JSONObject(response);
-                            String title = jsonObject.getString("title");
-                            String intro = jsonObject.getString("intro");
-
-                            surveyTableDao.updateSurvey(title,intro,surveyId);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
 
+                        //备份问卷信息
+                        //bufferTimeTableDao.setBake(response);
+                        bakesTableDao.addBake(surveyId,response);
 
-                            ParseResponse.parseAllQuesDetail(questionTableDao,jsonObject);
+                        //先删除该问卷所有的问题数据
+                        questionTableDao.deleltSurveyAllQues(surveyId);
 
-                            bufferTimeTableDao.addSurveyBufferTime(surveyId,TimeUtil.getCurTime());
+                        ParseResponse.parseAllQuesDetail(questionTableDao,jsonObject);
+
+                        bufferTimeTableDao.addSurveyBufferTime(surveyId,TimeUtil.getCurTime());
 
 
 
@@ -405,6 +431,14 @@ public class StartSurveyActivity extends BaseActivity {
 
     int getListViewCount(int id){
         return listView.getCount();
+    }
+
+    private void editSurveyInfo(){
+        Intent intent = new Intent(StartSurveyActivity.this,NewSurveyActivity.class);
+        intent.putExtra("surveyId",surveyId);
+        intent.putExtra("flag",Constants.EditSurvey);
+        startActivityForResult(intent,0);
+        //startActivity(intent);
     }
 
     private void reloadListView(){
@@ -439,29 +473,39 @@ public class StartSurveyActivity extends BaseActivity {
 
             public void onClick(DialogInterface dialog, int which) {
 
+                if (surveyId != 0) {//只针对修改问卷的操作进行恢复数据，新建问卷不需要
 
-                //恢复备份数据
+                    //恢复备份数据
 
-                String bakeDatas = bufferTimeTableDao.getBake();
-
-                if (bakeDatas!=null){
-                    try {
-                        //先删除该问卷所有的问题数据
-                        questionTableDao.deleltSurveyAllQues(surveyId);
-
-                        JSONObject jsonObject = new JSONObject(bakeDatas);
-
-                        String title = jsonObject.getString("title");
-                        String intro = jsonObject.getString("intro");
-
-                        surveyTableDao.updateSurvey(title,intro,surveyId);
-                        ParseResponse.parseAllQuesDetail(questionTableDao,jsonObject);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                    //String bakeDatas = bufferTimeTableDao.getBake();
+                    String bakeDatas = null;
+                    Cursor cursor = bakesTableDao.selectBakeBySurveyId(surveyId);
+                    if (cursor.moveToFirst()) {
+                        bakeDatas = cursor.getString(cursor.getColumnIndex("content"));
                     }
-                    Log.d("haha",TAG+" bakeDatas "+bakeDatas);
-                }else {
-                    Log.d("haha",TAG+" bakeDatas is null.");
+
+                    if (bakeDatas != null) {
+
+                        Log.d("haha", TAG + " bakeDatas " + bakeDatas);
+
+                        try {
+                            //先删除该问卷所有的问题数据
+                            questionTableDao.deleltSurveyAllQues(surveyId);
+
+                            JSONObject jsonObject = new JSONObject(bakeDatas);
+
+                            String title = jsonObject.getString("title");
+                            String intro = jsonObject.getString("intro");
+
+                            surveyTableDao.updateSurvey(title, intro, surveyId);
+                            ParseResponse.parseAllQuesDetail(questionTableDao, jsonObject);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    } else {
+                        Log.d("haha", TAG + " bakeDatas is null.");
+                    }
                 }
 
                 finish();
@@ -477,6 +521,41 @@ public class StartSurveyActivity extends BaseActivity {
         builder.create().show();
     }
 
+    /**
+     * 修改提醒：修改处于发布状态的问卷将导致之前的问卷结果不可用
+     * @param
+     */
+    private void editWran() {
+
+        String title = "修改发布过的问卷将丢失本问卷所有的结果数据";
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setMessage(title);
+        builder.setTitle("提示");
+        builder.setPositiveButton("知道了", new DialogInterface.OnClickListener() {
+
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+
+        builder.create().show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 0){//从修改title和intro页面返回  需刷新title
+
+            Cursor cursor1 = surveyTableDao.selectSurveyById(surveyId);
+            while (cursor1.moveToNext()){
+                surveyTitle = cursor1.getString(cursor1.getColumnIndex("title"));
+            }
+
+            customTitle.setText(surveyTitle);
+
+        }
+    }
 
     public boolean onKeyDown(int keyCode, KeyEvent event)
     {

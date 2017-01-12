@@ -25,12 +25,15 @@ public class MyRectView extends View{
 
     private Boolean selected = false;
 
-    public MyRectView(Context context, int data) {
+    private int mWidth;
+
+    public MyRectView(Context context, int data,int width) {
         super(context);
         this.context = context;
         mPaint = new Paint();
         mBounds = new Rect();
         mValue = data;
+        mWidth = width;
     }
 
     public void setViewSelected(Boolean selected){
@@ -44,7 +47,7 @@ public class MyRectView extends View{
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        setMeasuredDimension(100,100);
+        setMeasuredDimension(mWidth,mWidth);
     }
 
     @Override

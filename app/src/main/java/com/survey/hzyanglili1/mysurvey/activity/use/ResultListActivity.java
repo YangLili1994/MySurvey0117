@@ -48,13 +48,13 @@ public class ResultListActivity extends BaseActivity{
     private int surveyId = 0;
 
     private SurveyTableDao surveyTableDao = null;
+    private ResultTableDao resultTableDao = null;
 
     /**----------------------- adapter -----------------------------**/
     private MyResultListCursorAdapter resultListCursorAdapter = null;
     private Cursor listCursors;//适配器对应数据源
 
     //网络请求
-    private Boolean hasNetWork = false;
     private RequestQueue requestQueue = null;
 
     @Override
@@ -65,21 +65,19 @@ public class ResultListActivity extends BaseActivity{
         surveyId = getIntent().getExtras().getInt("survey_id");
 
         surveyTableDao = new SurveyTableDao(new DBHelper(this,1));
+        resultTableDao = new ResultTableDao(new DBHelper(this,1));
         requestQueue = Volley.newRequestQueue(this);
-
-        hasNetWork = NetWorkUtils.isNetworkConnected(this);
-
-        if (hasNetWork){
-            Log.d("haha",TAG+" network is connected.");
-            getSurveyListFromServer();
-        }else {
-            Log.d("haha",TAG+" network is not connected.");
-            initViewsAndEvents();
-            getSurveyListFromLocal();
-        }
 
         initViewsAndEvents();
 
+
+        if (Constants.isNetConnected){//
+            Log.d("haha",TAG+" network is connected.");
+            getResultListFromServer();
+        }else {
+            Log.d("haha",TAG+" network is not connected.");
+            getResultListFromLocal();
+        }
 
     }
 
@@ -101,31 +99,27 @@ public class ResultListActivity extends BaseActivity{
 
         resultListView = (ListView) findViewById(R.id.activity_surveyresult_list);
 
-
-
     }
 
 
-    private void getSurveyListFromServer(){
-        Log.d("haha",TAG+ "  getSurveyListFromServer...");
-        StringRequest stringRequest = new StringRequest(Constants.URL_USE_SubjectList,
+    private void getResultListFromServer(){
+        Log.d("haha",TAG+ "  getResultListFromServer...");
+        StringRequest stringRequest = new StringRequest(Constants.URL_USE_SubjectList+"&id="+surveyId,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        Log.d(TAG, "surveyList response = "+response);
+                        Log.d("haha", TAG+"   ResultList response = "+response);
 
-                        //surveyTableDao.clearSurveyTable();
+                        resultTableDao.clearAllResult(surveyId);
 
                         try {
-                            if(ParseResponse.parseSurveyList(surveyTableDao,new JSONObject(response))){
-                                Log.d(TAG, "parse surveyList success!");
+                            if(ParseResponse.parseResultList(resultTableDao,new JSONObject(response),surveyId)){
+                                Log.d(TAG, "parse ResultList success!");
                             }else{
-                                Log.d(TAG, "parse surveyList fail!");
+                                Log.d(TAG, "parse ResultList fail!");
                             }
 
-                            initViewsAndEvents();
-
-                            getSurveyListFromLocal();
+                            getResultListFromLocal();
 
 
                         } catch (JSONException e) {
@@ -135,44 +129,36 @@ public class ResultListActivity extends BaseActivity{
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, error.getMessage(), error);
+                Log.e("haha",TAG+"   volley error" +error.getMessage(), error);
             }
         });
 
         requestQueue.add(stringRequest);
     }
 
-    private void getSurveyListFromLocal(){
+    private void getResultListFromLocal(){
 
-        listCursors =  surveyTableDao.getAll();
+        listCursors =  resultTableDao.getAllBySurveyId(surveyId);
 
         resultListCursorAdapter = new MyResultListCursorAdapter(this, listCursors, 0, new MyResultListCursorAdapter.CallBack() {
             @Override
-            public void itemClickHandler(int resultId) {
+            public void itemClickHandler(int resultId,int id) {
                 //jump into resultshow
                 Intent intent = new Intent(ResultListActivity.this,SurveyPrelookActivity.class);
                 intent.putExtra("survey_id",surveyId);
                 intent.putExtra("action_type", Constants.RESULT);
                 intent.putExtra("result_id",resultId);
+                intent.putExtra("id",id);//数据库中自增id
                 startActivity(intent);
             }
         });
 
         resultListView.setAdapter(resultListCursorAdapter);
-    }
 
-
-    private Cursor getResultCursors(){
-        Cursor cursor = null;
-
-        ResultTableDao dao = new ResultTableDao(new DBHelper(this,1));
-        cursor = dao.selectResultsBySurveyId(surveyId);
-
-        if (!cursor.moveToNext()){
-            Log.d("haha","there is no result.");
+        if (listCursors.getCount() == 0){
             noResultTV.setVisibility(View.VISIBLE);
         }
-
-        return cursor;
     }
+
+
 }

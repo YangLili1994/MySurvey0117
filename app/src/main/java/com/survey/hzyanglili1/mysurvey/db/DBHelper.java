@@ -18,46 +18,51 @@ public class DBHelper extends SQLiteOpenHelper {
     final private  static String CREATE_SURVEIES_TABLE_SQL = "create table "+ Constants.SURVEIES_TABLENAME
             +"(_id integer primary key," +
             "status integer," +
-            "id String," +
-            "date String," +
-            "change String default \"null\"," +
-            "title String," +
-            "bufferTime String default \"null\"," +
-            "intro String)";
+            "id text," +
+            "date text," +
+            "change text default \"null\"," +
+            "title text," +
+            "bufferTime text default \"null\"," +
+            "intro text)";
 
     final private  static String CREATE_BUFFERTIME_TABLE_SQL = "create table "+ Constants.BUFFERTIME_TABLENAME
             +"(_id integer primary key," +
             "id interger," +
-            "bufferTime String default \"null\")";
+            "bufferTime text default \"null\")";
 
     final private  static String CREATE_QUESTIONS_TABLE_SQL = "create table "+ Constants.QUESTIONS_TABLENAME
             +"(_id integer primary key," +
-            "surveyId String," +
-            "id interger," +
-            "text String," +
+            "surveyId text," +
+            "id integer," +
+            "text text," +
             "type integer," +
-            "typeS String," +
+            "typeS text," +
             "required integer," +
             "hasPic integer," +
-            "pics String," +
-            "optionTexts String," +
+            "pics text," +
+            "optionTexts text," +
             "totalPic integer," +
             "totalOption integer," +
-            "optionPics String)";
+            "optionPics text)";
 
     final private  static String CREATE_RESULTS_TABLE_SQL = "create table "+ Constants.RESULTS_TABLENAME
             +"(_id integer primary key," +
-            "result_id id," +
-            "survey_id interger," +
-            "result_time INT4," +
-            "result_content text)";
+            "result_id integer," +
+            "survey_id integer," +
+            "name text," +
+            "sex integer," +
+            "sexS text," +
+            "age integer," +
+            "date text," +
+            "other text," +
+            "total integer," +
+            "type integer default 0," +
+            "results text)";
 
-    final private  static String CREATE_OPTIONS_TABLE_SQL = "create table "+ Constants.OPTIONS_TABLENAME
+    final private  static String CREATE_BAKEDATAS_TABLE_SQL = "create table "+ Constants.BAKES_TABLENAME
             +"(_id integer primary key," +
-            "question_id String," +
-            "option_id interger," +
-            "option_type integer," +
-            "option_content String)";
+            "survey_id integer," +
+            "content text)";
 
 
 
@@ -68,12 +73,10 @@ public class DBHelper extends SQLiteOpenHelper {
     //为创建数据库的时候执行（数据库已存在则不执行）
     @Override
     public void onCreate(SQLiteDatabase db) {
-
-
         //第一次使用数据库时自动建表
         db.execSQL(CREATE_SURVEIES_TABLE_SQL);
         db.execSQL(CREATE_QUESTIONS_TABLE_SQL);
-        //db.execSQL(CREATE_OPTIONS_TABLE_SQL);
+        db.execSQL(CREATE_BAKEDATAS_TABLE_SQL);
         db.execSQL(CREATE_RESULTS_TABLE_SQL);
         db.execSQL(CREATE_BUFFERTIME_TABLE_SQL);
 
@@ -86,7 +89,7 @@ public class DBHelper extends SQLiteOpenHelper {
         Log.d(TAG,"-----database onupgrade-----");
         db.execSQL("drop table if exists "+Constants.SURVEIES_TABLENAME);
         db.execSQL("drop table if exists "+Constants.QUESTIONS_TABLENAME);
-        //db.execSQL("drop table if exists "+Constants.OPTIONS_TABLENAME);
+        db.execSQL("drop table if exists "+Constants.BAKES_TABLENAME);
         db.execSQL("drop table if exists "+Constants.RESULTS_TABLENAME);
         db.execSQL("drop table if exists "+Constants.BUFFERTIME_TABLENAME);
 

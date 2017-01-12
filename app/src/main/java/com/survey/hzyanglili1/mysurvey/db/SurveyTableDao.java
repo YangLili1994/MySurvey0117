@@ -34,6 +34,7 @@ public class SurveyTableDao {
         Cursor oldSurvey = selectSurveyById(survey.getId());
 
         if (!oldSurvey.moveToFirst()) {//不存在  添加
+            Log.d(TAG," add survey id not exist."+survey.getId());
         }else {//存在，判断缓存的有效性
             deleltSurvey(survey.getId());
         }
@@ -46,10 +47,10 @@ public class SurveyTableDao {
         values.put("status", survey.getStatus() + "");
         values.put("date", survey.getDate());
         values.put("change",survey.getChange() );//////注意,这里先保持不变，当加载全部数据到本地数据库的时候会更改change的值（在startactivity中）
-        values.put("title", survey.getTitle());
-        values.put("intro", survey.getIntro());
+        values.put("title", ""+survey.getTitle());
+        values.put("intro", ""+survey.getIntro());
 
-        Log.d("haha", TAG+" add survey success id"+survey.getId());
+        Log.d(TAG," add survey success id"+survey.getId());
 
         return db.insert(Constants.SURVEIES_TABLENAME, null, values);
     }
@@ -80,9 +81,13 @@ public class SurveyTableDao {
 
         String sql = "delete from "+Constants.SURVEIES_TABLENAME + " where id = ?";
         String sql1 = "delete from "+Constants.QUESTIONS_TABLENAME + " where surveyId = ?";
+        String sql2 = "delete from "+Constants.BUFFERTIME_TABLENAME+ " where id = ?";
 
         db.execSQL(sql,new String[]{id+""});
         db.execSQL(sql1,new String[]{id+""});
+        db.execSQL(sql2,new String[]{id+""});
+
+        Log.d(TAG,"  deleltSurvey "+id);
     }
 
     /**
@@ -93,6 +98,18 @@ public class SurveyTableDao {
         db = dbHelper.getWritableDatabase();
 
         String sql = "delete from "+Constants.SURVEIES_TABLENAME;
+
+        db.execSQL(sql);
+    }
+
+    /**
+     * 清空已发布问卷表
+     */
+    public void clearPublicSurveyTable(){
+        //得到数据库
+        db = dbHelper.getWritableDatabase();
+
+        String sql = "delete from "+Constants.SURVEIES_TABLENAME+" where status = 2";
 
         db.execSQL(sql);
     }
@@ -126,6 +143,13 @@ public class SurveyTableDao {
         db.execSQL(sql,new Object[]{survey.getStatus(),survey.getTitle(),survey.getIntro(),survey.getDate(),survey.getChange(),survey.getId()});
     }
 
+    public void updateStatus(int surveyId,int status){
+        db = dbHelper.getWritableDatabase();
+        String sql = "update "+Constants.SURVEIES_TABLENAME+" set status = ? where id = ?";
+
+        db.execSQL(sql,new Object[]{status,surveyId});
+    }
+
 
 
     /**
@@ -150,6 +174,13 @@ public class SurveyTableDao {
 
     public Cursor getAll(){
         String sql = "select * from "+Constants.SURVEIES_TABLENAME +" order by id asc";
+        Cursor cursor = dbHelper.getReadableDatabase().rawQuery(sql,null);
+
+        return cursor;
+    }
+
+    public Cursor getAllPublicSurvey(){
+        String sql = "select * from "+Constants.SURVEIES_TABLENAME +" where status = 2 order by id asc";
         Cursor cursor = dbHelper.getReadableDatabase().rawQuery(sql,null);
 
         return cursor;
@@ -182,7 +213,7 @@ public class SurveyTableDao {
 
             survey = new Survey(Integer.parseInt(id), status, title, intro, date, change);
         }else {
-            Log.d("haha","survey null");
+            Log.d(TAG,"survey null");
         }
 
         return survey;

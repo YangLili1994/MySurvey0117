@@ -57,7 +57,7 @@ public class QuestionTableDao {
 
         db.insert(Constants.QUESTIONS_TABLENAME,null,values);
 
-        Log.d(TAG,"add survey success");
+        Log.d(TAG,"add question success");
     }
 
     /**
@@ -86,7 +86,7 @@ public class QuestionTableDao {
 
         db.execSQL(sql,new Integer[]{questionId});
 
-        Log.d("haha","delete question success.");
+        Log.d(TAG,"delete question success.");
     }
 
     /**
@@ -159,14 +159,14 @@ public class QuestionTableDao {
         }
 
 
-        Log.d("lala","the _id = "+id1);
+       // Log.d("lala","the _id = "+id1);
 
         Cursor cursor2 = selectQuestionByQuestionId(questionId2);
         if(cursor2.moveToNext()){
             id2 = cursor2.getInt(0);
         }
 
-        Log.d("lala","last _id = "+id2);
+       // Log.d("lala","last _id = "+id2);
 
         if (id1 != -1 && id2 != -1){
             String sql = "update "+Constants.QUESTIONS_TABLENAME +" set id = ? where _id = ?";
@@ -174,12 +174,12 @@ public class QuestionTableDao {
             db.execSQL(sql,new Object[]{questionId2,id1});
             db.execSQL(sql,new Object[]{questionId1,id2});
 
-            Log.d("haha",TAG+"   exchangeQuestion success.");
+            Log.d(TAG,"   exchangeQuestion success.");
 
             return true;
         }
 
-        Log.d("haha",TAG+"   exchangeQuestion failed.");
+        Log.d(TAG,"   exchangeQuestion failed.");
         return false;
 
     }
@@ -193,13 +193,13 @@ public class QuestionTableDao {
         //得到数据库
         db = dbHelper.getWritableDatabase();
 
-        Log.d("haha","sql === 获取自增id");
+        //Log.d("haha","sql === 获取自增id");
 
         Cursor cursor = selectQuestionByQuestionId(questionIdOld);
         cursor.moveToNext();
         int id = cursor.getInt(0);
 
-        Log.d("haha","sql === 自增id"+id);
+        //Log.d("haha","sql === 自增id"+id);
 
         String sql = "update "+Constants.QUESTIONS_TABLENAME +" set question_id = ? where _id = ?";
 

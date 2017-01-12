@@ -35,23 +35,67 @@ public class ResultTableDao {
         ContentValues values = new ContentValues();
         values.put("result_id",result.getResultId());
         values.put("survey_id",result.getSurveyId());
-        values.put("result_time",result.getResultTime());
-        values.put("result_content",result.getContent());
+        values.put("name",result.getName());
+        values.put("sex",result.getSex());
+        values.put("sexS",result.getSexS());
+        values.put("age",result.getAge());
+        values.put("date",result.getDate());
+        values.put("total",result.getTotal());
+        values.put("type",result.getType());
+        values.put("results",result.getRows());
+        values.put("other",result.getOther());
 
         db.insert(Constants.RESULTS_TABLENAME,null,values);
 
         Log.d(TAG,"add result success");
     }
 
-    /**
-     * 根据调查结果id删除result
-     * @param id
-     */
-    public void deleltResult(int id){
+    public void updateResults(int resultId,String results){
         //得到数据库
         db = dbHelper.getWritableDatabase();
 
-        String sql = "delete from "+Constants.RESULTS_TABLENAME + " where result_id = ?";
+        String sql = "update "+Constants.RESULTS_TABLENAME + " set results = ? where result_id = ?";
+
+        db.execSQL(sql,new String[]{results,resultId+""});
+
+        Log.d(TAG,"update Results success");
+    }
+
+    public void updateOtherInfo(int resultId,String otherInfo){
+        //得到数据库
+        db = dbHelper.getWritableDatabase();
+
+        String sql = "update "+Constants.RESULTS_TABLENAME + " set other = ? where result_id = ?";
+
+        db.execSQL(sql,new String[]{otherInfo,resultId+""});
+
+        Log.d(TAG,"update OtherInfo success");
+    }
+
+    /**
+     * 根据调查结果id删除从服务器获得的result
+     * @param surveyId
+     */
+    public void clearBufferResult(int surveyId){
+        //得到数据库
+        db = dbHelper.getWritableDatabase();
+
+        String sql = "delete from "+Constants.RESULTS_TABLENAME + " where survey_id = ? and type = 2";
+
+        db.execSQL(sql,new String[]{surveyId+""});
+
+        Log.d(TAG,"delete result success");
+    }
+
+    /**
+     * 根据自增id修改保存类型
+     * @param id
+     */
+    public void updateResultType(int id){
+        //得到数据库
+        db = dbHelper.getWritableDatabase();
+
+        String sql = "update "+Constants.RESULTS_TABLENAME + " set type = 2 where _id = ?";
 
         db.execSQL(sql,new String[]{id+""});
 
@@ -59,20 +103,18 @@ public class ResultTableDao {
     }
 
     /**
-     * 更改数据库
-     * @param result
-     * @param resultId
+     * 根据调查结果id删除result(包括缓存和本地)
+     * @param surveyId
      */
-    public void updateResult(Result result,int resultId){
+    public void clearAllResult(int surveyId){
         //得到数据库
         db = dbHelper.getWritableDatabase();
 
-        String sql = "update "+Constants.RESULTS_TABLENAME+" set result_time = ? ,result_content = ? where result_id = ?";
+        String sql = "delete from "+Constants.RESULTS_TABLENAME + " where survey_id = ? and type = 2";
 
-        db.execSQL(sql,new Object[]{result.getResultTime(),result.getContent(),result.getResultId()});
+        db.execSQL(sql,new String[]{surveyId+""});
 
-        Log.d(TAG,"add update success");
-
+        Log.d(TAG,"delete all result success by surveyId");
     }
 
     /**
@@ -80,12 +122,46 @@ public class ResultTableDao {
      * @param surveyId
      * @return
      */
-    public Cursor selectResultsBySurveyId(int surveyId){
+    public Cursor selectLocalResultsBySurveyId(int surveyId){
         Cursor cursor = null;
 
         db = dbHelper.getWritableDatabase();
 
-        String sql = "select * from "+Constants.RESULTS_TABLENAME+" where survey_id = ? order by result_time desc";
+        String sql = "select * from "+Constants.RESULTS_TABLENAME+" where survey_id = ? and type = 1 ";
+
+        cursor = db.rawQuery(sql,new String[]{surveyId+""});
+
+        return cursor;
+    }
+
+    /**
+     * 查询result
+     * @param
+     * @return
+     */
+    public Cursor selectLocalResults(){
+        Cursor cursor = null;
+
+        db = dbHelper.getWritableDatabase();
+
+        String sql = "select * from "+Constants.RESULTS_TABLENAME+" where type = ?";
+
+        cursor = db.rawQuery(sql,new String[]{""+1});
+
+        return cursor;
+    }
+
+    /**
+     * 查询result
+     * @param surveyId
+     * @return
+     */
+    public Cursor selectAllResultsBySurveyId(int surveyId){
+        Cursor cursor = null;
+
+        db = dbHelper.getWritableDatabase();
+
+        String sql = "select * from "+Constants.RESULTS_TABLENAME+" where survey_id = ? order by _id desc ";
 
         cursor = db.rawQuery(sql,new String[]{surveyId+""});
 
@@ -97,7 +173,7 @@ public class ResultTableDao {
      * @param resultId
      * @return
      */
-    public Cursor selectResultsByResultId(int resultId){
+    public Cursor selectResultByResultId(int resultId){
         Cursor cursor = null;
 
         db = dbHelper.getWritableDatabase();
@@ -109,24 +185,37 @@ public class ResultTableDao {
         return cursor;
     }
 
+    /**
+     * 查询result by 自增id
+     * @param increId
+     * @return
+     */
+    public Cursor selectResultByIncreId(int increId){
+        Cursor cursor = null;
 
-    public Cursor getAll(){
-        String sql = "select * from "+Constants.RESULTS_TABLENAME;
-        Cursor cursor = dbHelper.getReadableDatabase().rawQuery(sql,null);
+        db = dbHelper.getWritableDatabase();
+
+        String sql = "select * from "+Constants.RESULTS_TABLENAME+" where _id = ?";
+
+        cursor = db.rawQuery(sql,new String[]{increId+""});
 
         return cursor;
     }
 
-    public int getAllCount(){
-        int count = 0;
 
-        String sql = "select * from "+Constants.RESULTS_TABLENAME;
-        Cursor cursor = dbHelper.getReadableDatabase().rawQuery(sql,null);
-        cursor.moveToNext();
-        count = cursor.getCount();
+    public Cursor getAllBySurveyId(int surveyId){
+        Cursor cursor = null;
 
-        return count;
+        db = dbHelper.getWritableDatabase();
+
+        String sql = "select * from "+Constants.RESULTS_TABLENAME+" where survey_id = ? order by date desc";
+
+        cursor = db.rawQuery(sql,new String[]{surveyId+""});
+
+        return cursor;
     }
+
+
 
 
 }

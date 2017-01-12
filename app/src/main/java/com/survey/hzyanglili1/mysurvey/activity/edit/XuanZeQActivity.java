@@ -248,11 +248,14 @@ public class XuanZeQActivity extends BaseActivity {
             //init ques title
             titleEt.setText(text.trim());
 
+
             //init option
             for (int i = 0;i<Math.min(optionTextsList.size(),optionImagesList.size());i++){
                 if (optionImagesList.get(i).equals(Constants.KONG) && optionTextsList.get(i).equals(Constants.KONG)) continue;
                 addNewOptionItem(optionImagesList.get(i),optionTextsList.get(i));
             }
+
+
 
             if (required == 1) {
                 mustOptionToggleButton.setSelected(true);
@@ -417,7 +420,13 @@ public class XuanZeQActivity extends BaseActivity {
         if (imagePath != null) {
             if (!imagePath.equals(Constants.KONG)) {
 
-                VolleyUtil.showImageByVolley(requestQueue,imagePath,addImage);
+                Bitmap bitmap = MySurveyApplication.decodeSampledBitmapFromFile(imagePath,80,80);
+
+                if (bitmap == null){
+                    VolleyUtil.showImageByVolley(requestQueue,imagePath,addImage);
+                }else {
+                    addImage.setImageBitmap(bitmap);
+                }
 
             }
         }

@@ -40,7 +40,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:paddingTop="20dp"
+        android:paddingTop="10dp"
         android:paddingBottom="10dp"
         android:id="@+id/chengdu_chengdu"
         android:layout_width="match_parent"
@@ -63,7 +63,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="15sp"
-            android:hint="完全不满意"
+            android:hint=""
             android:textColor="@color/alpha_60_black"/>
 
 
@@ -75,7 +75,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="15sp"
-            android:hint="非常满意"
+            android:hint=""
             android:textColor="@color/alpha_60_black"/>
 
     </RelativeLayout>

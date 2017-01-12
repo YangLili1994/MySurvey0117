@@ -5,11 +5,13 @@ import android.util.Log;
 
 import com.survey.hzyanglili1.mysurvey.Application.Constants;
 import com.survey.hzyanglili1.mysurvey.db.QuestionTableDao;
+import com.survey.hzyanglili1.mysurvey.db.ResultTableDao;
 import com.survey.hzyanglili1.mysurvey.db.SurveyTableDao;
 import com.survey.hzyanglili1.mysurvey.entity.ChengduQuestion;
 import com.survey.hzyanglili1.mysurvey.entity.DanXuanQuestion;
 import com.survey.hzyanglili1.mysurvey.entity.DuoXuanQuestion;
 import com.survey.hzyanglili1.mysurvey.entity.Question;
+import com.survey.hzyanglili1.mysurvey.entity.Result;
 import com.survey.hzyanglili1.mysurvey.entity.Survey;
 import com.survey.hzyanglili1.mysurvey.entity.TiankongQuestion;
 
@@ -59,6 +61,9 @@ public class ParseResponse {
                     String path = option.getString("path");
                     Boolean hasOpPic = option.getBoolean("pic");
 
+                    if (opText.trim().isEmpty()) opText = Constants.KONG;
+                    //if (path.trim().isEmpty()) path = Constants.KONG;
+
                     optionTexts.append(opText).append('$');
 
                     if (hasOpPic) {
@@ -84,6 +89,8 @@ public class ParseResponse {
                 JSONArray pics1 = jsonObject.getJSONArray("pics");
                 JSONArray options1 = jsonObject.getJSONArray("options");
 
+
+
                 StringBuffer titlePics1 = new StringBuffer();
                 for (int i = 0; i < totalPic1; i++) {
                     titlePics1.append(pics1.getString(i)).append('$');
@@ -97,6 +104,9 @@ public class ParseResponse {
                     String opText = option.getString("text");
                     String path = option.getString("path");
                     Boolean hasOpPic = option.getBoolean("pic");
+
+                    if (opText.trim().isEmpty()) opText = "null";
+                    //if (path.trim().isEmpty()) path = "null";
 
                     optionTextsSB1.append(opText).append('$');
                     if (hasOpPic) {
@@ -131,7 +141,7 @@ public class ParseResponse {
 
                 StringBuffer titlePics2 = new StringBuffer();
                 for (int i = 0; i < totalPic2; i++) {
-                    titlePics2.append(Constants.URL_BASE + pics2.getString(i)).append('$');
+                    titlePics2.append(pics2.getString(i)).append('$');
                 }
 
                 question = new TiankongQuestion(surveyId,id2,text2,type,typeS2,required2,hasPic2,totalPic2,titlePics2.toString().trim());
@@ -156,7 +166,7 @@ public class ParseResponse {
 
                 StringBuffer titlePics3 = new StringBuffer();
                 for (int i = 0; i < totalPic3; i++) {
-                    titlePics3.append(Constants.URL_BASE + pics3.getString(i)).append('$');
+                    titlePics3.append(pics3.getString(i)).append('$');
                 }
 
                     question = new ChengduQuestion(surveyId,id3,text3,type,typeS3,required3,hasPic3,totalPic3,titlePics3.toString().trim(),
@@ -194,12 +204,54 @@ public class ParseResponse {
 
                     JSONObject object = array.getJSONObject(i);
                     Question question = parseQuesDetail(surveyId,object);
+
+                    //Log.d("haha","parse ques ---"+question.toString());
                     dao.addQuestion(question);
                 }
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+
+
+    public static Boolean parseResultList(ResultTableDao dao, JSONObject jsonObject,int surveyId) {
+
+        if (jsonObject == null) return false;
+
+        try {
+            Boolean result = jsonObject.getBoolean("result");
+
+            if (result){
+
+                int total = jsonObject.getInt("Total");
+                JSONArray resultArrays = jsonObject.getJSONArray("Rows");
+
+
+                for (int i = 0;i<total;i++){
+
+                    JSONObject resultInfo = resultArrays.getJSONObject(i);
+                    int id = resultInfo.getInt("id");
+                    String name = resultInfo.getString("name");
+                    int sex = resultInfo.getInt("sex");
+                    String sexS = resultInfo.getString("sexS");
+                    int age = resultInfo.getInt("age");
+                    String date = resultInfo.getString("date");
+                    Result result1 = new Result(id,surveyId,name,sex,sexS,age,2,date);
+
+                    dao.addResult(result1);
+
+
+                }
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return true;
+
     }
 
     public static Boolean parseSurveyList(SurveyTableDao dao,JSONObject jsonObject) {
@@ -252,70 +304,6 @@ public class ParseResponse {
         }
 
         return survey;
-    }
-
-    public static Boolean parseQuesList(QuestionTableDao dao,int surveyId,JSONObject jsonObject) {
-
-        if (jsonObject == null) return false;
-
-        try {
-            Boolean result = jsonObject.getBoolean("result");
-
-            if (result){
-
-                int total = jsonObject.getInt("Total");
-                JSONArray quesArrays = jsonObject.getJSONArray("Rows");
-
-
-                for (int i = 0;i<total;i++){
-
-                    JSONObject quesObject = quesArrays.getJSONObject(i);
-
-                    Question question = parseQues(surveyId,quesObject);
-
-                    dao.addQuestion(question);
-                }
-            }
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return true;
-
-    }
-
-    private static Question parseQues(int surveyid,JSONObject jsonObject) {
-
-        Question question = null;
-
-        if (jsonObject == null) return null;
-
-        try {
-            int id = jsonObject.getInt("id");
-            String text = jsonObject.getString("text");
-            String typeS = jsonObject.getString("typeS");
-            int type = jsonObject.getInt("type");
-
-            switch (type){
-                case 1:
-                    question = new DanXuanQuestion(surveyid,id,text,type,typeS);
-                    break;
-                case 2:
-                    question = new DuoXuanQuestion(surveyid,id,text,type,typeS);
-                    break;
-                case 3:
-                    question = new TiankongQuestion(surveyid,id,text,type,typeS);
-                    break;
-                case 4:
-                    question = new ChengduQuestion(surveyid,id,text,type,typeS);
-                    break;
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return question;
     }
 
 

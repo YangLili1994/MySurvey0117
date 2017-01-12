@@ -119,7 +119,7 @@ public class SurveyListActivity extends BaseActivity {
                     public void onResponse(String response) {
                         Log.d(TAG, "surveyList response = "+response);
 
-                        surveyTableDao.clearSurveyTable();
+                        surveyTableDao.clearPublicSurveyTable();
 
                         try {
                             if(ParseResponse.parseSurveyList(surveyTableDao,new JSONObject(response))){
@@ -149,7 +149,7 @@ public class SurveyListActivity extends BaseActivity {
 
     private void getSurveyListFromLocal(){
 
-        listCursors =  surveyTableDao.getAll();
+        listCursors =  surveyTableDao.getAllPublicSurvey();
 
         cursorAdapter = new MyUsedSurveyListAdapter(this, listCursors, 0, new MyUsedSurveyListAdapter.CallBack() {
 
@@ -166,6 +166,8 @@ public class SurveyListActivity extends BaseActivity {
                     Intent intent = new Intent(SurveyListActivity.this, ResultListActivity.class);
                     intent.putExtra("survey_id", surveyId);
                     startActivity(intent);
+
+
                 }
 
             }

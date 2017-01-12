@@ -174,6 +174,11 @@ public class ChengduQuestionActivity extends BaseActivity {
 
         if (isNew){
             customTitle.setText("新建量表题");
+
+            //默认为必选项
+            toggleButton.setSelected(true);
+            required = 1;
+
         }else {
             //init customtitle
             customTitle.setText("题目 "+(quesNum+1));
@@ -219,10 +224,10 @@ public class ChengduQuestionActivity extends BaseActivity {
 
                 new AlertDialog.Builder(ChengduQuestionActivity.this).setTitle("请选择程度等级").setIcon(
                         android.R.drawable.ic_dialog_info).setSingleChoiceItems(
-                        new String[] { " -5", " -4"," -3"," -2"," -1"," 0"," 1"}, (minVal+5),
+                        new String[] { " 0", " 1"," 2"," 3"," 4"," 5"," 6"," 7"," 8"," 9"}, (minVal),
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                chengduminTV.setText((which-5)+" ");
+                                chengduminTV.setText((which)+" ");
                                 dialog.dismiss();
                             }
                         }).setNegativeButton("取消", null).show();
@@ -235,10 +240,10 @@ public class ChengduQuestionActivity extends BaseActivity {
             public void onClick(View view) {
                 new AlertDialog.Builder(ChengduQuestionActivity.this).setTitle("请选择程度等级").setIcon(
                         android.R.drawable.ic_dialog_info).setSingleChoiceItems(
-                        new String[] { " 3", " 4"," 5"," 6"," 7"," 8"," 9"," 10" }, (maxVal-3),
+                        new String[] { " 0", " 1"," 2"," 3"," 4"," 5"," 6"," 7"," 8"," 9" }, (maxVal),
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                chengdumaxTV.setText((which+3)+" ");
+                                chengdumaxTV.setText((which)+" ");
                                 dialog.dismiss();
                             }
                         }).setNegativeButton("取消", null).show();
@@ -267,7 +272,11 @@ public class ChengduQuestionActivity extends BaseActivity {
 
         titleImagesList.add(Constants.KONG);
 
-        titleGridViewAdapter = new MyTitleGridViewAdapter(this, titleImagesList, null,new MyTitleGridViewAdapter.OnVisibleChangedListenner() {
+        for (int i = 0 ;i<titleImagesList.size();i++){
+            Log.d("haha",TAG+"  init gridview --  titleimage = "+titleImagesList.get(i));
+        }
+
+        titleGridViewAdapter = new MyTitleGridViewAdapter(this, titleImagesList, requestQueue,new MyTitleGridViewAdapter.OnVisibleChangedListenner() {
             @Override
             public void onVisibleChanged(Boolean isVisible) {
                 if (isVisible){
@@ -349,7 +358,7 @@ public class ChengduQuestionActivity extends BaseActivity {
         builder.create().show();
     }
 
-    private Boolean addQuestion(){
+    private Boolean addQuestion() {
 
         String titleString = titleEt.getText().toString().trim();
 
@@ -359,39 +368,45 @@ public class ChengduQuestionActivity extends BaseActivity {
         maxVal = Integer.parseInt(chengdumaxTV.getText().toString().trim());
 
 
-        if (titleString == null || titleString.isEmpty() || titleString.equals("")){
-            Toast.makeText(this,"题目标题不能为空！",Toast.LENGTH_LONG).show();
+        if (titleString == null || titleString.isEmpty() || titleString.equals("")) {
+            Toast.makeText(this, "题目标题不能为空！", Toast.LENGTH_LONG).show();
             return false;
-        }else {
+        } else if (minVal >= maxVal) {
+            Toast.makeText(this, "请检查最小值最大值的取值！", Toast.LENGTH_LONG).show();
+            return false;
+        } else {
 
             totalPic = titleImagesList.size() - 1;//-1去掉最后的null
-            if (totalPic>0)  hasPic = 1;
+            if (totalPic > 0) hasPic = 1;
 
             StringBuilder titleImagesSB = new StringBuilder();
-            for (String s : titleImagesList){
-                titleImagesSB.append(s).append('$');
+            //title image路径
+            for (int i = 0;i<totalPic;i++){
+
+                titleImagesSB.append(titleImagesList.get(i)).append("$");
+
             }
 
             ChengduQuestion question = null;
 
             if (isNew) {//创建题目，把题目添加到db
 
-                id = questionTableDao.getMaxQuesId()+1;
-                if (id == -1){
-                    Log.d("haha","未查询到maxQuesId");
+                id = questionTableDao.getMaxQuesId() + 1;
+                if (id == -1) {
+                    Log.d("haha", "未查询到maxQuesId");
                     id = 0;
                 }
 
-                question = new ChengduQuestion(surveyId,id,titleString,4,Constants.LIANGBIAOTI,required,hasPic,totalPic,titleImagesSB.toString(),minText,maxText,minVal,maxVal);
+                question = new ChengduQuestion(surveyId, id, titleString, 4, Constants.LIANGBIAOTI, required, hasPic, totalPic, titleImagesSB.toString(), minText, maxText, minVal, maxVal);
 
                 questionTableDao.addQuestion(question);
-                Log.d(TAG, "已创建题目");
-            }else {//修改题目
+                Log.d("haha", TAG+"   已创建题目"+question.toString());
+            } else {//修改题目
 
-                question = new ChengduQuestion(surveyId,id,titleString,4,Constants.LIANGBIAOTI,required,hasPic,totalPic,titleImagesSB.toString(),minText,maxText,minVal,maxVal);
+                question = new ChengduQuestion(surveyId, id, titleString, 4, Constants.LIANGBIAOTI, required, hasPic, totalPic, titleImagesSB.toString(), minText, maxText, minVal, maxVal);
 
-                Log.d("haha","修改题目"+question.toString());
-                questionTableDao.updateQuestion(question,id);
+                Log.d("haha", "修改题目" + question.toString());
+                questionTableDao.updateQuestion(question, id);
             }
 
             return true;
