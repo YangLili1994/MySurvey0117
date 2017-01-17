@@ -107,6 +107,8 @@ public class MySurveyListCursorAdapter extends CursorAdapter {
 
         if (status == 2){
             viewHolder.publicBt.setSelected(true);
+        }else if (status == 1){
+            viewHolder.publicBt.setSelected(false);
         }
 
         viewHolder.publicBt.setOnClickListener(new View.OnClickListener() {

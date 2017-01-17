@@ -212,6 +212,8 @@ public class ParseResponse {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
+        dao = null;
     }
 
 
@@ -249,6 +251,8 @@ public class ParseResponse {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
+        dao = null;
 
         return true;
 

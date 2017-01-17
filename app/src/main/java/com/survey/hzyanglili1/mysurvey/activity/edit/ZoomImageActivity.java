@@ -37,10 +37,13 @@ public class ZoomImageActivity extends Activity {
 
         setContentView(R.layout.activity_zoomimage);
 
-        requestQueue = Volley.newRequestQueue(this);
+        requestQueue = MySurveyApplication.getRequestQueue();
 
         String imagePath = getIntent().getExtras().getString("imagePath");
-        Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+        //Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+
+
+        Bitmap bitmap = MySurveyApplication.decodeSampledBitmapFromFile(imagePath,1080,1920);
 
         imageView = (ImageView) findViewById(R.id.activity_zoomimage);
 

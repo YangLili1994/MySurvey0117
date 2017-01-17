@@ -49,12 +49,12 @@ public class DBHelper extends SQLiteOpenHelper {
             +"(_id integer primary key," +
             "result_id integer," +
             "survey_id integer," +
-            "name text," +
-            "sex integer," +
-            "sexS text," +
-            "age integer," +
+            "name text default ''," +
+            "sex integer default 0," +
+            "sexS text default ''," +
+            "age integer default 0," +
             "date text," +
-            "other text," +
+            "other text default ''," +
             "total integer," +
             "type integer default 0," +
             "results text)";

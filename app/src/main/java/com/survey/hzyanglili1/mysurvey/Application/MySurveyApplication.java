@@ -7,7 +7,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
+import android.os.Environment;
+import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,10 +20,14 @@ import android.widget.ListView;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
+import com.squareup.leakcanary.LeakCanary;
+import com.squareup.leakcanary.RefWatcher;
 import com.survey.hzyanglili1.mysurvey.entity.Survey;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,12 +38,37 @@ import java.util.List;
 
 public class MySurveyApplication extends Application {
 
+    public static Context mContext = null;
+
+    private static RequestQueue requestQueue = null;
+
     public static List<Survey> surveyList = new ArrayList<>();
+
+    private RefWatcher mRefWatcher;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        if (mContext == null) {
+            mContext = getApplicationContext();
+        }
+
+        if (requestQueue == null){
+            requestQueue = Volley.newRequestQueue(this);
+        }
+
+        mRefWatcher = LeakCanary.install(this);
+    }
+
+    public static RequestQueue getRequestQueue(){
+        return requestQueue;
+    }
 
     //对图片进行二进制转换
     public static byte[] getValue(String imagePath) {
 
-        Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+        //Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+        Bitmap bitmap = MySurveyApplication.decodeSampledBitmapFromFile(imagePath,1080,1920);
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream() ;
         bitmap.compress(Bitmap.CompressFormat.JPEG,80,bos) ;
@@ -44,8 +76,34 @@ public class MySurveyApplication extends Application {
         return bos.toByteArray();
     }
 
+    /**
+     * 获取sd缓存的目录,如果挂载了sd卡则使用sd卡缓存，否则使用应用的缓存目录。
+     * @param uniqueName 缓存目录名,比如bitmap
+     * @return
+     */
+    public static String getDiskCacheDir(String uniqueName) {
 
 
+
+        Context context = getMySurveyContext();
+
+        String cachePath;
+        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+
+
+            cachePath = context.getExternalCacheDir().getPath();
+            Log.d("haha", "cache path "+cachePath);
+        } else {
+            cachePath = context.getCacheDir().getPath();
+        }
+
+        return cachePath+ File.separator+uniqueName;
+    }
+
+
+    public static Context getMySurveyContext() {
+        return mContext;
+    }
 
 
     /**动态改变listView的高度*/
@@ -117,6 +175,8 @@ public class MySurveyApplication extends Application {
         //return createScaleBitmap(src, options.outWidth, options.outHeight, options.inSampleSize);
         return src;
     }
+
+
     /**
      * @description 通过传入的bitmap，进行压缩，得到符合标准的bitmap
      *
@@ -125,7 +185,7 @@ public class MySurveyApplication extends Application {
      * @param dstHeight
      * @return
      */
-    private static Bitmap createScaleBitmap(Bitmap src, int dstWidth, int dstHeight, int inSampleSize) {
+    public static Bitmap createScaleBitmap(Bitmap src, int dstWidth, int dstHeight, int inSampleSize) {
         // 如果是放大图片，filter决定是否平滑，如果是缩小图片，filter无影响，我们这里是缩小图片，所以直接设置为false
         Bitmap dst = Bitmap.createScaledBitmap(src, dstWidth/inSampleSize, dstHeight/inSampleSize, false);
         if (src != dst) { // 如果没有缩放，那么不回收
@@ -200,11 +260,11 @@ public class MySurveyApplication extends Application {
                 e.printStackTrace();
             }
         }
-        if (image != null && !image.isRecycled())
-        {
-            image.recycle();
-            image = null;
-        }
+//        if (image != null && !image.isRecycled())
+//        {
+//            image.recycle();
+//            image = null;
+//        }
         return bitmap;
     }
 

@@ -1,9 +1,12 @@
 package com.survey.hzyanglili1.mysurvey.utils;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.LruCache;
 import android.widget.ImageView;
@@ -14,6 +17,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.ImageRequest;
 import com.survey.hzyanglili1.mysurvey.Application.Constants;
+import com.survey.hzyanglili1.mysurvey.Application.MySurveyApplication;
 import com.survey.hzyanglili1.mysurvey.R;
 import com.survey.hzyanglili1.mysurvey.db.QuestionTableDao;
 import com.survey.hzyanglili1.mysurvey.db.SurveyTableDao;
@@ -28,7 +32,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -52,7 +60,15 @@ public class VolleyUtil {
             // LruCache通过构造函数传入缓存值，以KB为单位。
             int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
             // 使用最大可用内存值的1/8作为缓存的大小。
-            int cacheSize = maxMemory / 8;
+            //int cacheSize = maxMemory / 8;
+
+            /** Default proportion of available heap to use for the cache */
+            final int DEFAULT_CACHE_SIZE_PROPORTION = 8;
+
+            ActivityManager manager = (ActivityManager) MySurveyApplication.getMySurveyContext().getSystemService(Context.ACTIVITY_SERVICE);
+            int memoryClass = manager.getMemoryClass();
+            int memoryClassInKilobytes = memoryClass * 1024;
+            int cacheSize = memoryClassInKilobytes / DEFAULT_CACHE_SIZE_PROPORTION;
 
             mCache = new LruCache<String, Bitmap>(cacheSize) {
                 @Override
@@ -60,26 +76,151 @@ public class VolleyUtil {
                     // 重写此方法来衡量每张图片的大小，默认返回图片数量。
                     return bitmap.getRowBytes() * bitmap.getHeight();
                 }
+
             };
         }
 
+        /**
+         * 先从缓存中找，有则返回图片，没有则从网络获取
+         */
         @Override
         public Bitmap getBitmap(String url) {
-            return mCache.get(url);
+            /**
+             * 先从缓存中找，有则返回，没有则返回null
+             */
+            Bitmap bitmap = mCache.get(url);
+
+            if (bitmap == null) {
+                String fileName = url.substring(url.lastIndexOf("/") + 1);
+                /**
+                 * 如果为null，则缓存中没有，从本地SD卡缓存中找
+                 */
+                File cacheDir = new File(MySurveyApplication.getDiskCacheDir("volleyImages"));
+                File[] cacheFiles = cacheDir.listFiles();
+                if (cacheFiles != null) {
+                    int i = 0;
+                    for (; i < cacheFiles.length; i++) {
+                        if (TextUtils.equals(fileName, cacheFiles[i].getName()))
+                            break;
+                    }
+                    /**
+                     * 若找到则返回bitmap否则返回null
+                     */
+                    if (i < cacheFiles.length) {
+                        bitmap = getSDBitmap(MySurveyApplication.getDiskCacheDir("volleyImages") + "/"
+                                + fileName);
+                        /**
+                         * 将从SD卡中获取的bitmap放入缓存中
+                         */
+                        mCache.put(url, bitmap);
+                    }
+                }
+            }
+            return bitmap;
+
+            //return mCache.get(url);
         }
 
         @Override
         public void putBitmap(String url, Bitmap bitmap) {
-            if (getBitmap(url) == null) {
+            /**
+             * 放入缓存中
+             */
+            if (mCache.get(url) == null) {
+
+                Bitmap bitmap1 = MySurveyApplication.compressImage(bitmap);
                 mCache.put(url, bitmap);
+
+                Log.d("haha","aaaaaaaaaaaaaaaaaa");
             }
+            /**
+             * 存到本地SD中
+             */
+            putSDBitmap(url.substring(url.lastIndexOf("/") + 1), bitmap);
         }
+
+        /**
+         * 从本地SD卡中获取图片
+         *
+         * @param imgPath
+         *            图片路径
+         * @return 图片的Bitmap
+         */
+        private Bitmap getSDBitmap(String imgPath) {
+            Bitmap bm = null;
+//            BitmapFactory.Options options = new BitmapFactory.Options();
+//            /**
+//             * 设置临时缓存大小
+//             */
+//            options.inTempStorage = new byte[1024 * 1024];
+//            /**
+//             * 通过设置Options.inPreferredConfig值来降低内存消耗： 默认为ARGB_8888: 每个像素4字节. 共32位。
+//             * Alpha_8: 只保存透明度，共8位，1字节。 ARGB_4444: 共16位，2字节。 RGB_565:共16位，2字节
+//             */
+//            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+//            /**
+//             * inPurgeable:设置为True,则使用BitmapFactory创建的Bitmap用于存储Pixel的内存空间，
+//             * 在系统内存不足时可以被回收，当应用需要再次访问该Bitmap的Pixel时，系统会再次调用BitmapFactory
+//             * 的decode方法重新生成Bitmap的Pixel数组。 设置为False时，表示不能被回收。
+//             */
+//            options.inPurgeable = true;
+//            options.inInputShareable = true;
+            /**
+             * 设置decode时的缩放比例。
+             */
+          //  options.inSampleSize = 1;
+          //  bm = BitmapFactory.decodeFile(imgPath, options);
+
+            Log.d("haha","aaaaaaaaaa   getDiskCacheDir");
+
+            bm = MySurveyApplication.decodeSampledBitmapFromFile(imgPath, 1080 / 2, 1920 / 2);
+            return bm;
+        }
+
+        /**
+         * 将图片保存到本地的SD卡中
+         *
+         * @param fileName
+         * @param bitmap
+         */
+        private void putSDBitmap(final String fileName, final Bitmap bitmap) {
+            new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    File cacheDir = new File(MySurveyApplication.getDiskCacheDir("volleyImages"));
+                    if (!cacheDir.exists())
+                        cacheDir.mkdirs();
+                    File cacheFile = new File(MySurveyApplication.getDiskCacheDir("volleyImages") + "/"
+                            + fileName);
+                    if (!cacheFile.exists()) {
+                        try {
+                            cacheFile.createNewFile();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    FileOutputStream fos;
+                    try {
+                        fos = new FileOutputStream(cacheFile);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                        fos.close();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        }
+
 
     }
 
     public static void showImageByVolley(RequestQueue requestQueue, String imagePath, final ImageView imageView){
 
-        //Log.d("haha","network image : "+imagePath);
+        //MyImageCache imageCache = MyImageCache.getImageCache(MySurveyApplication.getMySurveyContext());
 
         ImageLoader loader = new ImageLoader(requestQueue,new BitmapCache());
 

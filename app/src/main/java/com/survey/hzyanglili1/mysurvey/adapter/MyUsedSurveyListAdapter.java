@@ -85,6 +85,8 @@ public class MyUsedSurveyListAdapter extends CursorAdapter {
         final String name = cursor.getString(cursor.getColumnIndex("title"));
         String desc = cursor.getString(cursor.getColumnIndex("intro"));
 
+
+
         viewHolder.id.setText(""+id);
         viewHolder.surveyName.setText(name);
         viewHolder.surveyDesc.setText(desc);

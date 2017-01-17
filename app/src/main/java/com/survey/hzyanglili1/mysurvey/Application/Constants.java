@@ -1,5 +1,8 @@
 package com.survey.hzyanglili1.mysurvey.Application;
 
+import android.content.Context;
+
+import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -41,6 +44,8 @@ public class Constants {
     public static final String DANXUANTI = "单选题";
     public static final String DUOXUANTI = "多选题";
     public static final String LIANGBIAOTI = "量表题";
+
+    //public static final String IMG_CACHE_DIR_PATH = MySurveyApplication.getDiskCacheDir("volleyImages");
 
 
     public static Boolean Enter = false;

@@ -172,7 +172,6 @@ public class SurveyListActivity extends BaseActivity {
 
             }
         });
-
         listView.setAdapter(cursorAdapter);
     }
 

@@ -74,6 +74,9 @@ public class MySurveiesActivity extends BaseActivity {
     private Boolean hasNetWork = false;
     private RequestQueue requestQueue = null;
 
+    //当前展开位置
+    private int curFirstPostion = -1;
+
 
 
     @Override
@@ -166,7 +169,9 @@ public class MySurveiesActivity extends BaseActivity {
                             JSONObject jsonObject = new JSONObject(response);
                             if(jsonObject.getBoolean("result")){//success
 
-                                ImageView publicBt = (ImageView) (listView.getChildAt(pos)).findViewById(R.id.item_mysurveylistcursoradapter_public);
+                                curFirstPostion = listView.getFirstVisiblePosition();
+
+                                ImageView publicBt = (ImageView) (listView.getChildAt(pos-curFirstPostion)).findViewById(R.id.item_mysurveylistcursoradapter_public);
 
                                 if (status == 1){
                                     Toast.makeText(MySurveiesActivity.this,"关闭问卷成功",Toast.LENGTH_SHORT).show();
@@ -252,7 +257,6 @@ public class MySurveiesActivity extends BaseActivity {
         cursorAdapter = new MySurveyListCursorAdapter(this,listCursors,0,callBack);
         listView.setAdapter(cursorAdapter);
     }
-
 
     /**
      * 删除问卷

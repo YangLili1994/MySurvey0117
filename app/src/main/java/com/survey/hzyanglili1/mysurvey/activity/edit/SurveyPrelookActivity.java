@@ -94,9 +94,9 @@ import static android.R.attr.switchMinWidth;
 
 public class SurveyPrelookActivity extends BaseActivity{
 
-    private static final String[] optionsNums = new String[]{"A.","B.","C.","D.","E.","F.","G.","H.","I."};
-    private static final int PIC_UP_DONE = 1;
-    private static final int TIME_OUT= 2;
+    private final String[] optionsNums = new String[]{"A.","B.","C.","D.","E.","F.","G.","H.","I."};
+    private final int PIC_UP_DONE = 1;
+    private final int TIME_OUT= 2;
 
     private static CountDownLatch countDownLatch = new CountDownLatch(1);
     private static CyclicBarrier cyclicBarrier = new CyclicBarrier(2);
@@ -155,7 +155,6 @@ public class SurveyPrelookActivity extends BaseActivity{
     private int total = 0;//total ques
     private String title = "";
     private int quesNum = 0;
-
 
     private Handler handler = new Handler(){
         @Override
@@ -274,7 +273,7 @@ public class SurveyPrelookActivity extends BaseActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_surveyprelook);
 
-        requestQueue = Volley.newRequestQueue(this);
+        requestQueue = Volley.newRequestQueue(MySurveyApplication.getMySurveyContext());
         resultTableDao = new ResultTableDao(new DBHelper(this,1));
         questionTableDao = new QuestionTableDao(new DBHelper(this,1));
         surveyTableDao = new SurveyTableDao(new DBHelper(this,1));
@@ -282,7 +281,9 @@ public class SurveyPrelookActivity extends BaseActivity{
         surveyId = getIntent().getExtras().getInt("survey_id");
         actionType = getIntent().getExtras().getInt("action_type");
 
-        screenSize = getScreenWidthAndHeight();
+        screenSize = getScreenWidthAndHeight();//1080   1920
+
+        //Log.d("haha","screenSize "+screenSize[0]+"   "+screenSize[1]);
 
         initViewAndEvent();
 
@@ -313,7 +314,7 @@ public class SurveyPrelookActivity extends BaseActivity{
 
                 switch (i){
                     case R.id.man:
-                         userSex = 1;
+                        userSex = 1;
                         break;
                     case R.id.women:
                         userSex = 2;
@@ -356,7 +357,7 @@ public class SurveyPrelookActivity extends BaseActivity{
         endBt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               endBtClicked();
+                endBtClicked();
             }
         });
 
@@ -406,9 +407,8 @@ public class SurveyPrelookActivity extends BaseActivity{
 
                 timer = new Timer();
                 // 参数：
-                // 1000，延时1秒后执行。
-                // 2000，每隔2秒执行1次task。
-                timer.schedule(task, 5000);
+                // 8000，延时8秒后执行。。
+                timer.schedule(task, 8000);
                 upLoadPics();
             }else {
                 Toast.makeText(this,"请检查网络连接",Toast.LENGTH_SHORT).show();
@@ -474,12 +474,28 @@ public class SurveyPrelookActivity extends BaseActivity{
             resultsMap.clear();
 
             if (cursor.moveToFirst()){
-                String results = cursor.getString(cursor.getColumnIndex("results"));
-                String otherInfo = cursor.getString(cursor.getColumnIndex("other"));
-                String name = cursor.getString(cursor.getColumnIndex("name"));
-                String sexS = cursor.getString(cursor.getColumnIndex("sexS"));
-                int sex = cursor.getInt(cursor.getColumnIndex("sex"));
-                int age = cursor.getInt(cursor.getColumnIndex("age"));
+
+                String otherInfo = "";
+                String results = "";
+                String name = "";
+                String sexS = "";
+                int sex = 0;
+                int age = 0;
+
+
+                results = cursor.getString(cursor.getColumnIndex("results"));
+                otherInfo = cursor.getString(cursor.getColumnIndex("other"));
+                name = cursor.getString(cursor.getColumnIndex("name"));
+                sexS = cursor.getString(cursor.getColumnIndex("sexS"));
+                sex = cursor.getInt(cursor.getColumnIndex("sex"));
+                age = cursor.getInt(cursor.getColumnIndex("age"));
+
+                if (otherInfo == null){
+                    otherInfo = "";
+                }
+
+
+                if (name == null)
 
                 //显示被试人信息
                 nameET.setText(name.trim());
@@ -491,21 +507,26 @@ public class SurveyPrelookActivity extends BaseActivity{
                     sexRG.check(R.id.women);
                 }
 
+                if (results != null) {
 
-                //获得题目结果信息
-                try {
-                    JSONArray jsonArray = new JSONArray(results);
-                    if (jsonArray != null){
-                        for (int i = 0;i<jsonArray.length();i++){
-                            JSONObject object = jsonArray.getJSONObject(i);
-                            int quesId = object.getInt("question");
-                            String result = object.getString("result");
 
-                            resultsMap.put(quesId,result);
+                    //获得题目结果信息
+                    try {
+                        JSONArray jsonArray = new JSONArray(results);
+                        if (jsonArray != null) {
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                JSONObject object = jsonArray.getJSONObject(i);
+                                int quesId = object.getInt("question");
+                                String result = object.getString("result");
+
+                                resultsMap.put(quesId, result);
+                            }
                         }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                }else if (!Constants.isNetConnected){
+                    Toast.makeText(MySurveyApplication.getMySurveyContext(),"请联网获取结果数据!",Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -649,7 +670,11 @@ public class SurveyPrelookActivity extends BaseActivity{
                             e.printStackTrace();
                         }
 
-                        ParseResponse.parseAllQuesDetail(questionTableDao,jsonObject);
+                        //ParseResponse.parseAllQuesDetail(questionTableDao,jsonObject);
+
+                        parseAllQuesDetail(jsonObject);
+
+                        jsonObject = null;
 
                         getQuesInfoFromLocal();
                     }
@@ -1295,7 +1320,7 @@ public class SurveyPrelookActivity extends BaseActivity{
             rightTV.setText(maxText);
 
 
-            int chengduRes = 0;
+            int chengduRes = -1;
             if (actionType == Constants.RESULT) {
 
                 String result = resultsMap.get(id);
@@ -1361,51 +1386,55 @@ public class SurveyPrelookActivity extends BaseActivity{
     }
 
 
-    private ImageView showImage(final String imagePath, ImageView imageView){
-        if (imagePath.equals("null" )|| imagePath.isEmpty()) return null;
+    private void showImage(final String imagePath, ImageView imageView){
+        if (imagePath.equals("null" )|| imagePath.isEmpty()) return;
         //Log.d("haha","showimage----imagepath----"+imagePath);
         Bitmap bitmap = MySurveyApplication.decodeSampledBitmapFromFile(imagePath, screenSize[0] / 2, screenSize[1] / 2);
 
         if (bitmap==null){
             VolleyUtil.showImageByVolley(requestQueue,imagePath,imageView);
-            return imageView;
+            // return imageView;
 
-        }
+        }else {
 
-        if (bitmap.getWidth() <= screenSize[0] / 2) {
-            imageView.setImageBitmap(bitmap);
+            if (bitmap.getWidth() <= screenSize[0] / 2) {
+                imageView.setImageBitmap(bitmap);
 
-        } else {
-            Bitmap bitmap1 = Bitmap.createScaledBitmap(bitmap, screenSize[0] / 2, bitmap.getHeight() * screenSize[0] / 2 / bitmap.getWidth(), true);
+            } else {
+                Bitmap bitmap1 = Bitmap.createScaledBitmap(bitmap, screenSize[0] / 2, bitmap.getHeight() * screenSize[0] / 2 / bitmap.getWidth(), true);
 
-            imageView.setImageBitmap(bitmap1);
-        }
-        imageView.setPadding(30, 30, 30, 30);
-       // imageView.setForegroundGravity(Gravity.CENTER);
+                imageView.setImageBitmap(bitmap1);
 
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.gravity = Gravity.CENTER_HORIZONTAL;
-        imageView.setLayoutParams(params);
+//                if (!bitmap1.isRecycled()){
+//                    bitmap1.recycle();
+//                    bitmap1 = null;
+//                }
+            }
 
+            imageView.setPadding(30, 30, 30, 30);
+            // imageView.setForegroundGravity(Gravity.CENTER);
 
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.gravity = Gravity.CENTER_HORIZONTAL;
+            imageView.setLayoutParams(params);
 
-
-//        imageView.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//
-//
-//                Intent intent = new Intent(SurveyPrelookActivity.this, ZoomImageActivity.class);
-//                intent.putExtra("imagePath", imagePath);
-//                startActivity(intent);
+//            if (!bitmap.isRecycled()) {
+//                bitmap.recycle();
 //            }
-//        });
+//            bitmap = null;
 
-        return imageView;
+            Log.d("haha","tututuutututututuutututu");
+
+
+        }
+
+
+
+        // return imageView;
 
     }
 
-    int[] getScreenWidthAndHeight(){
+    private int[] getScreenWidthAndHeight(){
         DisplayMetrics metric = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metric);
         int width = metric.widthPixels;  // 屏幕宽度（像素）
@@ -1414,7 +1443,7 @@ public class SurveyPrelookActivity extends BaseActivity{
         return new int[]{width,height};
     }
 
-    public void upLoadPics() {
+    private void upLoadPics() {
 
         Cursor cursor = questionTableDao.selectQuestionBySurveyId(surveyId);
 
@@ -1641,10 +1670,12 @@ public class SurveyPrelookActivity extends BaseActivity{
         }
         otherS = otherInfoET.getText().toString().trim();
 
+        if (otherS == null) otherS = "";
+
         String sexS = null;
         if (userSex == 1){
             sexS = "男";
-        }else {
+        }else if (userSex == 2){
             sexS = "女";
         }
 
@@ -1674,10 +1705,12 @@ public class SurveyPrelookActivity extends BaseActivity{
         }
         otherS = otherInfoET.getText().toString().trim();
 
+        if (otherS == null) otherS = "";
+
         String sexS = null;
         if (userSex == 1){
             sexS = "男";
-        }else {
+        }else if (userSex == 2){
             sexS = "女";
         }
 
@@ -1764,4 +1797,38 @@ public class SurveyPrelookActivity extends BaseActivity{
 
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        System.gc();
+    }
+
+
+    /**
+     * 解析json信息   并保存到数据库
+     * @param jsonObject
+     */
+     private void parseAllQuesDetail(JSONObject jsonObject){
+
+        try {
+            Boolean result = jsonObject.getBoolean("result");
+            if (result) {
+
+                int surveyId = jsonObject.getInt("id");
+                int total = jsonObject.getInt("total");
+                JSONArray array = jsonObject.getJSONArray("questions");
+
+                for (int i = 0;i<total;i++){
+
+                    JSONObject object = array.getJSONObject(i);
+                    Question question = ParseResponse.parseQuesDetail(surveyId,object);
+
+                    //Log.d("haha","parse ques ---"+question.toString());
+                    questionTableDao.addQuestion(question);
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 }
