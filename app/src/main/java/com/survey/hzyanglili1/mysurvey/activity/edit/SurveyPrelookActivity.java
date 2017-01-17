@@ -452,6 +452,7 @@ public class SurveyPrelookActivity extends BaseActivity{
             getResultInfoFromLocal();
         }
 
+
     }
 
     private void getResultInfoFromLocal(){
@@ -493,9 +494,6 @@ public class SurveyPrelookActivity extends BaseActivity{
                 if (otherInfo == null){
                     otherInfo = "";
                 }
-
-
-                if (name == null)
 
                 //显示被试人信息
                 nameET.setText(name.trim());
